@@ -1,0 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    color: #1B2A4A;
+    background: #FAFAFA;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  h1, h2, h3, h4 {
+    font-family: 'Cormorant Garamond', serif;
+  }
+}
+
+@layer utilities {
+  .focus-ring {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5B8DBE] focus-visible:ring-offset-2;
+  }
+}
+
+/* Lottie color shuffle — cycles through cancer awareness ribbon colors */
+.lottie-color-shuffle {
+  animation: colorShuffle 12s ease-in-out infinite;
+}
+
+@keyframes colorShuffle {
+  0%   { filter: hue-rotate(0deg);   }  /* gold - childhood cancer */
+  14%  { filter: hue-rotate(280deg); }  /* pink - breast cancer */
+  28%  { filter: hue-rotate(200deg); }  /* purple - pancreatic / general */
+  42%  { filter: hue-rotate(140deg); }  /* teal/green - liver / lymphoma */
+  57%  { filter: hue-rotate(170deg); }  /* blue - colon */
+  71%  { filter: hue-rotate(320deg); }  /* red - blood / leukemia */
+  85%  { filter: hue-rotate(50deg);  }  /* orange - kidney / leukemia */
+  100% { filter: hue-rotate(0deg);   }  /* back to gold */
+}
