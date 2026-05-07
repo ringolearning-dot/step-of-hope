@@ -1,98 +1,45 @@
-import Database from 'better-sqlite3';
+import { createClient } from '@supabase/supabase-js';
 import bcrypt from 'bcryptjs';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_KEY
+);
 
-const db = new Database(join(__dirname, 'stepofhope.db'));
+export async function initDB() {
+  // Seed admin
+  const { data: existingAdmin } = await supabase
+    .from('admins')
+    .select('id')
+    .eq('email', 'eliek@stepofhope.com')
+    .single();
 
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
+  if (!existingAdmin) {
+    const hashedPassword = bcrypt.hashSync('elie12345', 12);
+    await supabase.from('admins').insert({
+      email: 'eliek@stepofhope.com',
+      password: hashedPassword,
+      name: 'Elie Karam',
+    });
+    console.log('Admin account created: eliek@stepofhope.com');
+  }
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS admins (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL,
-    name TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
+  // Seed donation stats
+  const { data: existingStats } = await supabase
+    .from('donation_stats')
+    .select('id')
+    .limit(1)
+    .single();
 
-  CREATE TABLE IF NOT EXISTS site_images (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    section TEXT NOT NULL,
-    slot TEXT NOT NULL,
-    filename TEXT NOT NULL,
-    original_name TEXT NOT NULL,
-    mime_type TEXT NOT NULL,
-    uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(section, slot)
-  );
+  if (!existingStats) {
+    await supabase.from('donation_stats').insert({
+      total_raised: 0,
+      total_donors: 0,
+      monthly_donors: 0,
+    });
+  }
 
-  CREATE TABLE IF NOT EXISTS donations (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    stripe_session_id TEXT UNIQUE,
-    stripe_payment_intent TEXT,
-    donor_name TEXT,
-    donor_email TEXT,
-    amount INTEGER NOT NULL,
-    currency TEXT DEFAULT 'usd',
-    status TEXT DEFAULT 'pending',
-    is_monthly INTEGER DEFAULT 0,
-    metadata TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-
-  CREATE TABLE IF NOT EXISTS volunteers (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    first_name TEXT NOT NULL,
-    last_name TEXT NOT NULL,
-    email TEXT NOT NULL,
-    phone TEXT,
-    interests TEXT,
-    message TEXT,
-    status TEXT DEFAULT 'new',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-
-  CREATE TABLE IF NOT EXISTS contacts (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    email TEXT NOT NULL,
-    subject TEXT,
-    inquiry_type TEXT DEFAULT 'general',
-    message TEXT NOT NULL,
-    status TEXT DEFAULT 'unread',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-
-  CREATE TABLE IF NOT EXISTS donation_stats (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    total_raised INTEGER DEFAULT 0,
-    total_donors INTEGER DEFAULT 0,
-    monthly_donors INTEGER DEFAULT 0,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-`);
-
-// Seed admin account
-const existingAdmin = db.prepare('SELECT id FROM admins WHERE email = ?').get('eliek@stepofhope.com');
-if (!existingAdmin) {
-  const hashedPassword = bcrypt.hashSync('elie12345', 12);
-  db.prepare('INSERT INTO admins (email, password, name) VALUES (?, ?, ?)').run(
-    'eliek@stepofhope.com',
-    hashedPassword,
-    'Elie Karam'
-  );
-  console.log('Admin account created: eliek@stepofhope.com');
+  console.log('Database initialized');
 }
 
-// Seed initial stats row
-const existingStats = db.prepare('SELECT id FROM donation_stats LIMIT 1').get();
-if (!existingStats) {
-  db.prepare('INSERT INTO donation_stats (total_raised, total_donors, monthly_donors) VALUES (0, 0, 0)').run();
-}
-
-export default db;
+export default supabase;

@@ -1,7 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3001/api';
-const UPLOADS_URL = 'http://localhost:3001/uploads/images';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -30,9 +29,13 @@ api.interceptors.response.use(
   }
 );
 
-export function getImageUrl(filename: string) {
-  return `${UPLOADS_URL}/${filename}`;
+// Images now have public_url from Supabase Storage
+export function getImageUrl(filenameOrUrl: string) {
+  // If it's already a full URL (from Supabase), return as-is
+  if (filenameOrUrl.startsWith('http')) return filenameOrUrl;
+  // Fallback for legacy local paths
+  return `${API_URL.replace('/api', '')}/uploads/images/${filenameOrUrl}`;
 }
 
-export { API_URL, UPLOADS_URL };
+export { API_URL };
 export default api;

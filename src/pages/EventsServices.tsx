@@ -5,7 +5,7 @@ import api, { getImageUrl } from '../lib/api';
 
 function SectionImage({ section, slot, fallback, className }: { section: string; slot: string; fallback: string; className?: string }) {
   const [src, setSrc] = useState<string | null>(null);
-  useEffect(() => { api.get(`/images/${section}/${slot}`).then(res => setSrc(getImageUrl(res.data.filename))).catch(() => {}); }, [section, slot]);
+  useEffect(() => { api.get(`/images/${section}/${slot}`).then(res => setSrc(res.data.public_url || getImageUrl(res.data.filename))).catch(() => {}); }, [section, slot]);
   if (src) return <img src={src} alt={fallback} className={className} />;
   return <div className={`bg-gradient-to-br from-navy/10 to-hope/10 flex items-center justify-center text-navy/30 text-sm ${className}`}>{fallback}</div>;
 }
@@ -206,19 +206,19 @@ export default function EventsServices() {
             >
               <Link
                 to="/contact?type=photobooth"
-                className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 bg-hope hover:bg-hope-light text-white font-display font-semibold rounded-xl transition-colors duration-300"
+                className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 bg-white text-navy font-display font-semibold rounded-xl hover:bg-white/90 transition-colors duration-300 shadow-lg"
               >
                 Book Photobooth
               </Link>
               <Link
                 to="/contact?type=360booth"
-                className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 bg-hope/20 hover:bg-hope/30 text-hope-light font-display font-semibold rounded-xl border border-hope/30 transition-colors duration-300"
+                className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 bg-transparent text-white font-display font-semibold rounded-xl border-2 border-white hover:bg-white hover:text-navy transition-colors duration-300"
               >
                 Book 360 Booth
               </Link>
               <Link
                 to="/contact"
-                className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 bg-white/10 hover:bg-white/20 text-white font-display font-semibold rounded-xl border border-white/20 transition-colors duration-300"
+                className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 bg-transparent text-white font-display font-semibold rounded-xl border-2 border-white/50 hover:bg-white hover:text-navy transition-colors duration-300"
               >
                 Contact Us
               </Link>

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import Stripe from 'stripe';
-import db from '../db/init.js';
+import supabase from '../db/init.js';
 import { authenticateToken } from '../middleware/auth.js';
 
 const router = Router();
@@ -46,9 +46,14 @@ router.post('/create-session', async (req, res) => {
     const session = await stripe.checkout.sessions.create(sessionParams);
 
     // Record pending donation
-    db.prepare(
-      'INSERT INTO donations (stripe_session_id, donor_name, donor_email, amount, is_monthly, status) VALUES (?, ?, ?, ?, ?, ?)'
-    ).run(session.id, donorName || 'Anonymous', donorEmail || null, Math.round(amount * 100), isMonthly ? 1 : 0, 'pending');
+    await supabase.from('donations').insert({
+      stripe_session_id: session.id,
+      donor_name: donorName || 'Anonymous',
+      donor_email: donorEmail || null,
+      amount: Math.round(amount * 100),
+      is_monthly: !!isMonthly,
+      status: 'pending',
+    });
 
     res.json({ url: session.url, sessionId: session.id });
   } catch (err) {
@@ -73,23 +78,53 @@ router.post('/webhook', async (req, res) => {
   switch (event.type) {
     case 'checkout.session.completed': {
       const session = event.data.object;
-      db.prepare(
-        'UPDATE donations SET status = ?, stripe_payment_intent = ? WHERE stripe_session_id = ?'
-      ).run('completed', session.payment_intent || session.subscription, session.id);
+
+      await supabase
+        .from('donations')
+        .update({
+          status: 'completed',
+          stripe_payment_intent: session.payment_intent || session.subscription,
+        })
+        .eq('stripe_session_id', session.id);
 
       // Update stats
-      const donation = db.prepare('SELECT * FROM donations WHERE stripe_session_id = ?').get(session.id);
+      const { data: donation } = await supabase
+        .from('donations')
+        .select('*')
+        .eq('stripe_session_id', session.id)
+        .single();
+
       if (donation) {
-        db.prepare('UPDATE donation_stats SET total_raised = total_raised + ?, total_donors = total_donors + 1, updated_at = CURRENT_TIMESTAMP').run(donation.amount);
-        if (donation.is_monthly) {
-          db.prepare('UPDATE donation_stats SET monthly_donors = monthly_donors + 1, updated_at = CURRENT_TIMESTAMP').run();
+        // Fetch current stats, increment, and update
+        const { data: stats } = await supabase
+          .from('donation_stats')
+          .select('*')
+          .limit(1)
+          .single();
+
+        if (stats) {
+          const updates = {
+            total_raised: stats.total_raised + donation.amount,
+            total_donors: stats.total_donors + 1,
+            updated_at: new Date().toISOString(),
+          };
+          if (donation.is_monthly) {
+            updates.monthly_donors = stats.monthly_donors + 1;
+          }
+          await supabase
+            .from('donation_stats')
+            .update(updates)
+            .eq('id', stats.id);
         }
       }
       break;
     }
     case 'checkout.session.expired': {
       const session = event.data.object;
-      db.prepare('UPDATE donations SET status = ? WHERE stripe_session_id = ?').run('expired', session.id);
+      await supabase
+        .from('donations')
+        .update({ status: 'expired' })
+        .eq('stripe_session_id', session.id);
       break;
     }
   }
@@ -100,8 +135,13 @@ router.post('/webhook', async (req, res) => {
 // Verify session (after redirect)
 router.get('/verify/:sessionId', async (req, res) => {
   try {
-    const donation = db.prepare('SELECT * FROM donations WHERE stripe_session_id = ?').get(req.params.sessionId);
-    if (!donation) return res.status(404).json({ error: 'Donation not found.' });
+    const { data: donation, error } = await supabase
+      .from('donations')
+      .select('*')
+      .eq('stripe_session_id', req.params.sessionId)
+      .single();
+
+    if (error || !donation) return res.status(404).json({ error: 'Donation not found.' });
     res.json({ status: donation.status, amount: donation.amount });
   } catch (err) {
     res.status(500).json({ error: 'Failed to verify donation.' });
@@ -111,101 +151,168 @@ router.get('/verify/:sessionId', async (req, res) => {
 // ===== ADMIN ROUTES =====
 
 // Get all donations
-router.get('/admin/all', authenticateToken, (req, res) => {
-  const { page = 1, limit = 50, status, startDate, endDate } = req.query;
-  const offset = (page - 1) * limit;
+router.get('/admin/all', authenticateToken, async (req, res) => {
+  try {
+    const { page = 1, limit = 50, status, startDate, endDate } = req.query;
+    const offset = (page - 1) * limit;
 
-  let query = 'SELECT * FROM donations WHERE 1=1';
-  let countQuery = 'SELECT COUNT(*) as total FROM donations WHERE 1=1';
-  const params = [];
-  const countParams = [];
+    // Build the data query
+    let query = supabase
+      .from('donations')
+      .select('*', { count: 'exact' });
 
-  if (status) {
-    query += ' AND status = ?';
-    countQuery += ' AND status = ?';
-    params.push(status);
-    countParams.push(status);
+    if (status) {
+      query = query.eq('status', status);
+    }
+    if (startDate) {
+      query = query.gte('created_at', startDate);
+    }
+    if (endDate) {
+      query = query.lte('created_at', endDate);
+    }
+
+    query = query
+      .order('created_at', { ascending: false })
+      .range(Number(offset), Number(offset) + Number(limit) - 1);
+
+    const { data: donations, count: total, error } = await query;
+
+    if (error) {
+      console.error('Fetch donations error:', error.message);
+      return res.status(500).json({ error: 'Failed to fetch donations.' });
+    }
+
+    res.json({
+      donations: donations || [],
+      total: total || 0,
+      page: Number(page),
+      totalPages: Math.ceil((total || 0) / limit),
+    });
+  } catch (err) {
+    console.error('Admin donations error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch donations.' });
   }
-  if (startDate) {
-    query += ' AND created_at >= ?';
-    countQuery += ' AND created_at >= ?';
-    params.push(startDate);
-    countParams.push(startDate);
-  }
-  if (endDate) {
-    query += ' AND created_at <= ?';
-    countQuery += ' AND created_at <= ?';
-    params.push(endDate);
-    countParams.push(endDate);
-  }
-
-  query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
-  params.push(Number(limit), Number(offset));
-
-  const donations = db.prepare(query).all(...params);
-  const { total } = db.prepare(countQuery).get(...countParams);
-
-  res.json({ donations, total, page: Number(page), totalPages: Math.ceil(total / limit) });
 });
 
 // Get dashboard stats
-router.get('/admin/stats', authenticateToken, (req, res) => {
-  const stats = db.prepare('SELECT * FROM donation_stats LIMIT 1').get();
+router.get('/admin/stats', authenticateToken, async (req, res) => {
+  try {
+    // Get donation_stats
+    const { data: stats } = await supabase
+      .from('donation_stats')
+      .select('*')
+      .limit(1)
+      .single();
 
-  const today = new Date().toISOString().split('T')[0];
-  const todayDonations = db.prepare(
-    "SELECT COALESCE(SUM(amount), 0) as total, COUNT(*) as count FROM donations WHERE status = 'completed' AND date(created_at) = ?"
-  ).get(today);
+    // Today's donations
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const tomorrowStart = new Date(todayStart);
+    tomorrowStart.setDate(tomorrowStart.getDate() + 1);
 
-  const thisMonth = today.substring(0, 7);
-  const monthDonations = db.prepare(
-    "SELECT COALESCE(SUM(amount), 0) as total, COUNT(*) as count FROM donations WHERE status = 'completed' AND strftime('%Y-%m', created_at) = ?"
-  ).get(thisMonth);
+    const { data: todayData } = await supabase
+      .from('donations')
+      .select('amount')
+      .eq('status', 'completed')
+      .gte('created_at', todayStart.toISOString())
+      .lt('created_at', tomorrowStart.toISOString());
 
-  const recentDonations = db.prepare(
-    "SELECT * FROM donations WHERE status = 'completed' ORDER BY created_at DESC LIMIT 10"
-  ).all();
+    const todayTotal = (todayData || []).reduce((sum, d) => sum + d.amount, 0);
+    const todayCount = (todayData || []).length;
 
-  // Monthly breakdown for chart (last 12 months)
-  const monthlyBreakdown = db.prepare(`
-    SELECT strftime('%Y-%m', created_at) as month,
-           SUM(amount) as total,
-           COUNT(*) as count
-    FROM donations
-    WHERE status = 'completed' AND created_at >= date('now', '-12 months')
-    GROUP BY strftime('%Y-%m', created_at)
-    ORDER BY month ASC
-  `).all();
+    // This month's donations
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+    const nextMonthStart = new Date(monthStart);
+    nextMonthStart.setMonth(nextMonthStart.getMonth() + 1);
 
-  res.json({
-    totalRaised: stats?.total_raised || 0,
-    totalDonors: stats?.total_donors || 0,
-    monthlyDonors: stats?.monthly_donors || 0,
-    todayTotal: todayDonations.total,
-    todayCount: todayDonations.count,
-    monthTotal: monthDonations.total,
-    monthCount: monthDonations.count,
-    recentDonations,
-    monthlyBreakdown
-  });
+    const { data: monthData } = await supabase
+      .from('donations')
+      .select('amount')
+      .eq('status', 'completed')
+      .gte('created_at', monthStart.toISOString())
+      .lt('created_at', nextMonthStart.toISOString());
+
+    const monthTotal = (monthData || []).reduce((sum, d) => sum + d.amount, 0);
+    const monthCount = (monthData || []).length;
+
+    // Recent donations
+    const { data: recentDonations } = await supabase
+      .from('donations')
+      .select('*')
+      .eq('status', 'completed')
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    // Monthly breakdown for chart (last 12 months)
+    const twelveMonthsAgo = new Date();
+    twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 12);
+
+    const { data: breakdownData } = await supabase
+      .from('donations')
+      .select('amount, created_at')
+      .eq('status', 'completed')
+      .gte('created_at', twelveMonthsAgo.toISOString())
+      .order('created_at', { ascending: true });
+
+    // Group by month in JS
+    const monthlyMap = {};
+    (breakdownData || []).forEach((d) => {
+      const month = d.created_at.substring(0, 7); // 'YYYY-MM'
+      if (!monthlyMap[month]) {
+        monthlyMap[month] = { month, total: 0, count: 0 };
+      }
+      monthlyMap[month].total += d.amount;
+      monthlyMap[month].count += 1;
+    });
+    const monthlyBreakdown = Object.values(monthlyMap).sort((a, b) =>
+      a.month.localeCompare(b.month)
+    );
+
+    res.json({
+      totalRaised: stats?.total_raised || 0,
+      totalDonors: stats?.total_donors || 0,
+      monthlyDonors: stats?.monthly_donors || 0,
+      todayTotal,
+      todayCount,
+      monthTotal,
+      monthCount,
+      recentDonations: recentDonations || [],
+      monthlyBreakdown,
+    });
+  } catch (err) {
+    console.error('Admin stats error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch stats.' });
+  }
 });
 
 // Export donations as CSV
-router.get('/admin/export', authenticateToken, (req, res) => {
-  const donations = db.prepare(
-    "SELECT id, donor_name, donor_email, amount, currency, status, is_monthly, created_at FROM donations ORDER BY created_at DESC"
-  ).all();
+router.get('/admin/export', authenticateToken, async (req, res) => {
+  try {
+    const { data: donations, error } = await supabase
+      .from('donations')
+      .select('id, donor_name, donor_email, amount, currency, status, is_monthly, created_at')
+      .order('created_at', { ascending: false });
 
-  const csv = [
-    'ID,Donor Name,Email,Amount (cents),Currency,Status,Monthly,Date',
-    ...donations.map(d =>
-      `${d.id},"${d.donor_name || ''}","${d.donor_email || ''}",${d.amount},${d.currency},${d.status},${d.is_monthly ? 'Yes' : 'No'},"${d.created_at}"`
-    )
-  ].join('\n');
+    if (error) {
+      return res.status(500).json({ error: 'Failed to export donations.' });
+    }
 
-  res.setHeader('Content-Type', 'text/csv');
-  res.setHeader('Content-Disposition', 'attachment; filename=donations-export.csv');
-  res.send(csv);
+    const csv = [
+      'ID,Donor Name,Email,Amount (cents),Currency,Status,Monthly,Date',
+      ...(donations || []).map(d =>
+        `${d.id},"${d.donor_name || ''}","${d.donor_email || ''}",${d.amount},${d.currency},${d.status},${d.is_monthly ? 'Yes' : 'No'},"${d.created_at}"`
+      )
+    ].join('\n');
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename=donations-export.csv');
+    res.send(csv);
+  } catch (err) {
+    console.error('Export error:', err.message);
+    res.status(500).json({ error: 'Failed to export donations.' });
+  }
 });
 
 export default router;

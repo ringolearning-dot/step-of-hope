@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import api, { getImageUrl } from '../../lib/api';
 import { HiPhoto, HiArrowUpTray, HiTrash, HiCheckCircle, HiXCircle } from 'react-icons/hi2';
 
@@ -28,6 +28,7 @@ interface SlotState {
   uploading: boolean;
   deleting: boolean;
   filename: string | null;
+  public_url: string | null;
   progress: number;
   feedback: { type: 'success' | 'error'; message: string } | null;
 }
@@ -43,7 +44,7 @@ export default function ImagesAdmin() {
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   // Fetch all current images on mount
-  useState(() => {
+  useEffect(() => {
     const fetchImages = async () => {
       try {
         const res = await api.get('/images');
@@ -56,6 +57,7 @@ export default function ImagesAdmin() {
             uploading: false,
             deleting: false,
             filename: img.filename,
+            public_url: img.public_url || null,
             progress: 0,
             feedback: null,
           };
@@ -69,7 +71,7 @@ export default function ImagesAdmin() {
       }
     };
     fetchImages();
-  });
+  }, []);
 
   const getSlotState = useCallback(
     (section: string, slot: string): SlotState => {
@@ -78,6 +80,7 @@ export default function ImagesAdmin() {
           uploading: false,
           deleting: false,
           filename: null,
+          public_url: null,
           progress: 0,
           feedback: null,
         }
@@ -122,6 +125,7 @@ export default function ImagesAdmin() {
       updateSlot(section, slot, {
         uploading: false,
         filename: res.data.filename || res.data.image?.filename,
+        public_url: res.data.public_url || null,
         progress: 100,
         feedback: { type: 'success', message: 'Uploaded' },
       });
@@ -209,7 +213,7 @@ export default function ImagesAdmin() {
                   <div className="aspect-video bg-gray-100 relative flex items-center justify-center overflow-hidden">
                     {state.filename ? (
                       <img
-                        src={getImageUrl(state.filename)}
+                        src={state.public_url || getImageUrl(state.filename!)}
                         alt={`${section} - ${slot}`}
                         className="w-full h-full object-cover"
                       />

@@ -10,7 +10,7 @@ function SectionImage({ section, slot, fallback, className }: { section: string;
   const [src, setSrc] = useState<string | null>(null);
   useEffect(() => {
     if (!section || !slot) return;
-    api.get(`/images/${section}/${slot}`).then(res => setSrc(getImageUrl(res.data.filename))).catch(() => {});
+    api.get(`/images/${section}/${slot}`).then(res => setSrc(res.data.public_url || getImageUrl(res.data.filename))).catch(() => {});
   }, [section, slot]);
   if (src) return <img src={src} alt={fallback} className={className} />;
   return (

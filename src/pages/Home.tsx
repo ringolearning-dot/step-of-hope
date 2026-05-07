@@ -35,7 +35,7 @@ function SectionImage({
   useEffect(() => {
     api
       .get(`/images/${section}/${slot}`)
-      .then((res) => setSrc(getImageUrl(res.data.filename)))
+      .then((res) => setSrc(res.data.public_url || getImageUrl(res.data.filename)))
       .catch(() => {});
   }, [section, slot]);
 

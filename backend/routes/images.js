@@ -1,22 +1,12 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
-import { fileURLToPath } from 'url';
-import { dirname, join, extname } from 'path';
-import { existsSync, unlinkSync } from 'fs';
-import db from '../db/init.js';
+import { extname } from 'path';
+import supabase from '../db/init.js';
 import { authenticateToken } from '../middleware/auth.js';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const storage = multer.diskStorage({
-  destination: join(__dirname, '..', 'uploads', 'images'),
-  filename: (req, file, cb) => {
-    const ext = extname(file.originalname);
-    cb(null, `${uuidv4()}${ext}`);
-  }
-});
+// Use memory storage so we get the file buffer for Supabase upload
+const storage = multer.memoryStorage();
 
 const upload = multer({
   storage,
@@ -34,61 +24,173 @@ const upload = multer({
 const router = Router();
 
 // Get all images for a section
-router.get('/:section', (req, res) => {
-  const images = db.prepare('SELECT * FROM site_images WHERE section = ? ORDER BY slot').all(req.params.section);
-  res.json(images);
+router.get('/:section', async (req, res) => {
+  try {
+    const { data: images, error } = await supabase
+      .from('site_images')
+      .select('*')
+      .eq('section', req.params.section)
+      .order('slot');
+
+    if (error) {
+      console.error('Fetch images error:', error.message);
+      return res.status(500).json({ error: 'Failed to fetch images.' });
+    }
+
+    res.json(images || []);
+  } catch (err) {
+    console.error('Get images error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch images.' });
+  }
 });
 
 // Get a specific image by section and slot
-router.get('/:section/:slot', (req, res) => {
-  const image = db.prepare('SELECT * FROM site_images WHERE section = ? AND slot = ?').get(
-    req.params.section,
-    req.params.slot
-  );
-  if (!image) return res.status(404).json({ error: 'Image not found.' });
-  res.json(image);
+router.get('/:section/:slot', async (req, res) => {
+  try {
+    const { data: image, error } = await supabase
+      .from('site_images')
+      .select('*')
+      .eq('section', req.params.section)
+      .eq('slot', req.params.slot)
+      .single();
+
+    if (error || !image) return res.status(404).json({ error: 'Image not found.' });
+    res.json(image);
+  } catch (err) {
+    console.error('Get image error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch image.' });
+  }
 });
 
 // Upload/replace image for a section slot (admin only)
-router.post('/:section/:slot', authenticateToken, upload.single('image'), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No file uploaded.' });
+router.post('/:section/:slot', authenticateToken, upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded.' });
 
-  const { section, slot } = req.params;
+    const { section, slot } = req.params;
+    const ext = extname(req.file.originalname);
+    const filename = `${uuidv4()}${ext}`;
+    const storagePath = `${section}/${slot}/${filename}`;
 
-  // Delete old file if exists
-  const existing = db.prepare('SELECT * FROM site_images WHERE section = ? AND slot = ?').get(section, slot);
-  if (existing) {
-    const oldPath = join(__dirname, '..', 'uploads', 'images', existing.filename);
-    if (existsSync(oldPath)) unlinkSync(oldPath);
-    db.prepare('DELETE FROM site_images WHERE section = ? AND slot = ?').run(section, slot);
+    // Delete old file from storage if exists
+    const { data: existing } = await supabase
+      .from('site_images')
+      .select('*')
+      .eq('section', section)
+      .eq('slot', slot)
+      .single();
+
+    if (existing) {
+      const oldPath = `${existing.section}/${existing.slot}/${existing.filename}`;
+      await supabase.storage.from('site-images').remove([oldPath]);
+      await supabase
+        .from('site_images')
+        .delete()
+        .eq('section', section)
+        .eq('slot', slot);
+    }
+
+    // Upload to Supabase Storage
+    const { error: uploadError } = await supabase.storage
+      .from('site-images')
+      .upload(storagePath, req.file.buffer, {
+        contentType: req.file.mimetype,
+        upsert: true,
+      });
+
+    if (uploadError) {
+      console.error('Storage upload error:', uploadError.message);
+      return res.status(500).json({ error: 'Failed to upload file to storage.' });
+    }
+
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from('site-images')
+      .getPublicUrl(storagePath);
+
+    const publicUrl = urlData?.publicUrl || null;
+
+    // Insert into site_images table
+    const { error: insertError } = await supabase.from('site_images').insert({
+      section,
+      slot,
+      filename,
+      original_name: req.file.originalname,
+      mime_type: req.file.mimetype,
+      public_url: publicUrl,
+    });
+
+    if (insertError) {
+      console.error('Image insert error:', insertError.message);
+      return res.status(500).json({ error: 'Failed to save image record.' });
+    }
+
+    // Return the newly created record
+    const { data: image } = await supabase
+      .from('site_images')
+      .select('*')
+      .eq('section', section)
+      .eq('slot', slot)
+      .single();
+
+    res.json(image);
+  } catch (err) {
+    console.error('Upload image error:', err.message);
+    res.status(500).json({ error: 'Failed to upload image.' });
   }
-
-  db.prepare(
-    'INSERT INTO site_images (section, slot, filename, original_name, mime_type) VALUES (?, ?, ?, ?, ?)'
-  ).run(section, slot, req.file.filename, req.file.originalname, req.file.mimetype);
-
-  const image = db.prepare('SELECT * FROM site_images WHERE section = ? AND slot = ?').get(section, slot);
-  res.json(image);
 });
 
 // Delete image (admin only)
-router.delete('/:section/:slot', authenticateToken, (req, res) => {
-  const { section, slot } = req.params;
-  const existing = db.prepare('SELECT * FROM site_images WHERE section = ? AND slot = ?').get(section, slot);
+router.delete('/:section/:slot', authenticateToken, async (req, res) => {
+  try {
+    const { section, slot } = req.params;
 
-  if (!existing) return res.status(404).json({ error: 'Image not found.' });
+    const { data: existing, error } = await supabase
+      .from('site_images')
+      .select('*')
+      .eq('section', section)
+      .eq('slot', slot)
+      .single();
 
-  const filePath = join(__dirname, '..', 'uploads', 'images', existing.filename);
-  if (existsSync(filePath)) unlinkSync(filePath);
+    if (error || !existing) return res.status(404).json({ error: 'Image not found.' });
 
-  db.prepare('DELETE FROM site_images WHERE section = ? AND slot = ?').run(section, slot);
-  res.json({ message: 'Image deleted.' });
+    // Remove from Supabase Storage
+    const storagePath = `${section}/${slot}/${existing.filename}`;
+    await supabase.storage.from('site-images').remove([storagePath]);
+
+    // Delete from database
+    await supabase
+      .from('site_images')
+      .delete()
+      .eq('section', section)
+      .eq('slot', slot);
+
+    res.json({ message: 'Image deleted.' });
+  } catch (err) {
+    console.error('Delete image error:', err.message);
+    res.status(500).json({ error: 'Failed to delete image.' });
+  }
 });
 
 // Get all images (admin)
-router.get('/', authenticateToken, (req, res) => {
-  const images = db.prepare('SELECT * FROM site_images ORDER BY section, slot').all();
-  res.json(images);
+router.get('/', authenticateToken, async (req, res) => {
+  try {
+    const { data: images, error } = await supabase
+      .from('site_images')
+      .select('*')
+      .order('section')
+      .order('slot');
+
+    if (error) {
+      console.error('Fetch all images error:', error.message);
+      return res.status(500).json({ error: 'Failed to fetch images.' });
+    }
+
+    res.json(images || []);
+  } catch (err) {
+    console.error('Get all images error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch images.' });
+  }
 });
 
 export default router;
