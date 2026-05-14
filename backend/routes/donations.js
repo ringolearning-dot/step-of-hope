@@ -12,7 +12,7 @@ function getStripe() {
 // Create checkout session
 router.post('/create-session', async (req, res) => {
   try {
-    const { amount, donorName, donorEmail, isMonthly } = req.body;
+    const { amount, name: donorName, email: donorEmail, isMonthly } = req.body;
 
     if (!amount || amount < 1) {
       return res.status(400).json({ error: 'Invalid donation amount.' });
