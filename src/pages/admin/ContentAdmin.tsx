@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../../lib/api';
+import DEFAULTS from '../../lib/content-defaults';
 import { HiPencilSquare, HiCheckCircle, HiXCircle } from 'react-icons/hi2';
 
 interface ContentField {
@@ -81,28 +82,35 @@ export default function ContentAdmin() {
 
   useEffect(() => {
     const fetchContent = async () => {
+      // Start with defaults
+      const fieldMap: Record<string, FieldState> = {};
+      Object.entries(DEFAULTS).forEach(([page, pageDefaults]) => {
+        Object.entries(pageDefaults).forEach(([fieldKey, value]) => {
+          fieldMap[`${page}/${fieldKey}`] = { value, saving: false, feedback: null };
+        });
+      });
+
       try {
         const res = await api.get('/content');
         const rows: any[] = res.data || [];
-        const fieldMap: Record<string, FieldState> = {};
 
+        // Override defaults with DB values
         rows.forEach((row: any) => {
           const key = `${row.page}/${row.field_key}`;
           fieldMap[key] = { value: row.field_value || '', saving: false, feedback: null };
         });
-
-        setFields(fieldMap);
       } catch {
-        // Content might be empty initially
-      } finally {
-        setLoading(false);
+        // Keep defaults on error
       }
+
+      setFields(fieldMap);
+      setLoading(false);
     };
     fetchContent();
   }, []);
 
   const getField = (page: string, key: string): FieldState => {
-    return fields[`${page}/${key}`] || { value: '', saving: false, feedback: null };
+    return fields[`${page}/${key}`] || { value: DEFAULTS[page]?.[key] || '', saving: false, feedback: null };
   };
 
   const updateField = (page: string, key: string, update: Partial<FieldState>) => {

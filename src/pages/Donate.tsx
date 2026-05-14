@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import api from '../lib/api';
+import useContent from '../lib/useContent';
 import { FaGift, FaPalette, FaPeopleRoof, FaHouseMedical, FaPeopleGroup, FaFaceSmileBeam, FaStar } from 'react-icons/fa6';
 import { IconType } from 'react-icons';
 
@@ -24,6 +25,7 @@ const impactItems: { icon: IconType; label: string; color: string }[] = [
 ];
 
 export default function Donate() {
+  const c = useContent('donate');
   const [searchParams] = useSearchParams();
   const [amount, setAmount] = useState<number | null>(50);
   const [customAmount, setCustomAmount] = useState('');
@@ -88,7 +90,7 @@ export default function Donate() {
             transition={{ duration: 0.7 }}
             className="font-display text-4xl md:text-6xl lg:text-7xl font-bold text-white leading-tight"
           >
-            Help Us Bring <span className="text-hope-light">Hope</span>
+            {c.hero_title}
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -96,8 +98,7 @@ export default function Donate() {
             transition={{ duration: 0.7, delay: 0.2 }}
             className="font-body text-lg md:text-xl text-white/70 mt-6 max-w-3xl mx-auto leading-relaxed"
           >
-            Every donation, no matter the size, helps us bring comfort, joy, and support to children
-            and families facing illness. Your generosity makes a real difference.
+            {c.hero_subtitle}
           </motion.p>
         </div>
       </section>

@@ -13,6 +13,7 @@ import {
   HiUsers,
 } from 'react-icons/hi2';
 import api, { getImageUrl } from '../lib/api';
+import useContent from '../lib/useContent';
 import handCombineAnim from '../assets/lottie/hand_combine_gold.json';
 import chatPeopleAnim from '../assets/lottie/get-involved-chat-gold (1).json';
 
@@ -148,6 +149,8 @@ const whatWeDo = [
 /*  HOME PAGE                                                         */
 /* ================================================================== */
 export default function Home() {
+  const c = useContent('home');
+
   return (
     <main className="overflow-hidden">
       {/* ============================================================ */}
@@ -173,7 +176,7 @@ export default function Home() {
             transition={{ duration: 0.8 }}
             className="font-display text-5xl sm:text-6xl md:text-7xl font-bold leading-tight mb-6"
           >
-            Every Child Deserves A Reason To Smile
+            {c.hero_title}
           </motion.h1>
 
           <motion.p
@@ -182,10 +185,7 @@ export default function Home() {
             transition={{ duration: 0.8, delay: 0.25 }}
             className="font-body text-lg sm:text-xl md:text-2xl text-white/90 max-w-3xl mx-auto mb-10 leading-relaxed"
           >
-            Step of Hope Foundation brings hope, joy, emotional support, and
-            unforgettable moments to children and families facing illness and
-            difficult medical journeys. Born from one family's fight, our
-            mission is to remind every child they are never alone.
+            {c.hero_subtitle}
           </motion.p>
 
           <motion.div
@@ -262,19 +262,13 @@ export default function Home() {
               Our Story
             </span>
             <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-navy mt-2 mb-6 leading-tight">
-              The Journey That Started Step Of Hope
+              {c.story_heading}
             </h2>
             <p className="font-body text-navy/70 leading-relaxed mb-4">
-              Step of Hope was born from the courageous journey of Serena Karam,
-              a brave little girl whose fight against illness inspired an entire
-              community. Through her story, the Karam family witnessed
-              first-hand the power of hope, compassion, and small acts of
-              kindness during the most difficult moments life can bring.
+              {c.story_text1}
             </p>
             <p className="font-body text-navy/70 leading-relaxed mb-8">
-              Determined to turn their experience into something meaningful,
-              they founded Step of Hope Foundation — so that no child or family
-              would ever have to walk that road alone.
+              {c.story_text2}
             </p>
             <Link
               to="/our-story"
@@ -359,16 +353,13 @@ export default function Home() {
             variants={fadeUp}
             className="font-display text-3xl sm:text-4xl md:text-5xl font-bold mt-3 mb-6 leading-tight"
           >
-            Your Smile Can Create Another Smile
+            {c.photobooth_heading}
           </motion.h2>
           <motion.p
             variants={fadeUp}
             className="font-body text-white/80 text-lg leading-relaxed max-w-2xl mx-auto mb-10"
           >
-            Book our professional photobooth and 360 booth for your next event.
-            Every booking directly supports our mission — turning moments of
-            fun into moments of hope for children and families who need it most.
-            Capture memories while making a difference.
+            {c.photobooth_text}
           </motion.p>
           <motion.div
             variants={fadeUp}
@@ -409,14 +400,10 @@ export default function Home() {
               YNO Platform
             </span>
             <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-navy mt-2 mb-6 leading-tight">
-              Organize Your Life. Help A Child Smile.
+              {c.yno_heading}
             </h2>
             <p className="font-body text-navy/70 leading-relaxed mb-8">
-              YNO is our innovative organizational platform designed to simplify
-              your daily life. Every subscription and interaction on YNO
-              directly supports the Step of Hope Foundation's programs — so
-              while you plan, organize, and stay on top of your tasks, you're
-              also giving hope to a child in need.
+              {c.yno_text}
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Link
@@ -456,16 +443,13 @@ export default function Home() {
             variants={fadeUp}
             className="font-display text-3xl sm:text-4xl md:text-5xl font-bold leading-tight mb-6"
           >
-            Born From One Family's Fight. Built To Bring Hope To Many Others.
+            {c.cta_heading}
           </motion.h2>
           <motion.p
             variants={fadeUp}
             className="font-body text-white/80 text-lg leading-relaxed max-w-2xl mx-auto mb-10"
           >
-            Whether you donate, volunteer, or simply share our story — you
-            become part of a movement that turns pain into purpose and hardship
-            into hope. Together, we can make sure no child faces their fight
-            alone.
+            {c.cta_text}
           </motion.p>
           <motion.div
             variants={fadeUp}

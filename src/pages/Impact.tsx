@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useInView } from 'react-intersection-observer'
 import api, { getImageUrl } from '../lib/api'
+import useContent from '../lib/useContent'
 
 /* ------------------------------------------------------------------ */
 /*  SectionImage                                                       */
@@ -61,6 +62,7 @@ const galleryItems = [
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 export default function Impact() {
+  const c = useContent('impact')
   const { ref: heroRef, inView: heroInView } = useInView({ threshold: 0.2, triggerOnce: true })
   const { ref: textRef, inView: textInView } = useInView({ threshold: 0.2, triggerOnce: true })
   const { ref: galleryRef, inView: galleryInView } = useInView({ threshold: 0.1, triggerOnce: true })
@@ -87,7 +89,7 @@ export default function Impact() {
             Our Impact
           </span>
           <h1 className="font-display text-[clamp(2.5rem,6vw,4.5rem)] font-bold text-navy leading-tight mb-6">
-            Creating Smiles<br className="hidden sm:block" /> That Matter
+            {c.hero_title}
           </h1>
           <div className="w-20 h-1 bg-hope rounded-full mx-auto" />
         </motion.div>
@@ -140,7 +142,7 @@ export default function Impact() {
             transition={{ duration: 0.7, ease }}
           >
             <h2 className="font-display text-3xl md:text-4xl font-semibold text-navy mb-4">
-              Moments of Impact
+              {c.gallery_heading}
             </h2>
             <div className="w-20 h-1 bg-hope rounded-full mx-auto" />
           </motion.div>

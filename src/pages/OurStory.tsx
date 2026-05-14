@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
 import api, { getImageUrl } from '../lib/api';
+import useContent from '../lib/useContent';
 
 /* ------------------------------------------------------------------ */
 /*  SectionImage – loads a CMS-managed image or shows a placeholder   */
@@ -161,6 +162,19 @@ const sections: StorySection[] = [
 /*  Page                                                              */
 /* ------------------------------------------------------------------ */
 export default function OurStory() {
+  const c = useContent('story');
+
+  const dynamicSections = sections.map((s) => {
+    const num = s.imageSlot.replace('section', '');
+    const titleKey = `section${num}_title`;
+    const textKey = `section${num}_text`;
+    return {
+      ...s,
+      title: c[titleKey] || s.title,
+      body: c[textKey] ? c[textKey].split('\n').filter(Boolean) : s.body,
+    };
+  });
+
   return (
     <main className="overflow-hidden">
       {/* ── HERO ──────────────────────────────────────────────── */}
@@ -175,9 +189,7 @@ export default function OurStory() {
           className="relative z-10 max-w-3xl"
         >
           <p className="font-display italic text-[#C9901A] text-3xl sm:text-4xl md:text-5xl leading-snug tracking-wide">
-            &ldquo;Never Lose Hope.
-            <br />
-            Keep On Fighting.&rdquo;
+            &ldquo;{c.hero_quote || 'Never Lose Hope. Keep On Fighting.'}&rdquo;
           </p>
         </motion.div>
       </section>
@@ -190,7 +202,7 @@ export default function OurStory() {
           className="hidden lg:block absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 bg-gradient-to-b from-[#C9901A]/0 via-[#C9901A]/40 to-[#C9901A]/0"
         />
 
-        {sections.map((s, i) => {
+        {dynamicSections.map((s, i) => {
           const isEven = i % 2 === 0; // even = image LEFT, text RIGHT
           const bgColor = i % 2 === 0 ? 'bg-white' : 'bg-[#FAF7F2]';
 

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { useInView } from 'react-intersection-observer'
 import { HiSparkles, HiHeart, HiUserGroup, HiStar, HiHome, HiSun } from 'react-icons/hi2'
 import api, { getImageUrl } from '../lib/api'
+import useContent from '../lib/useContent'
 
 /* ------------------------------------------------------------------ */
 /*  SectionImage                                                       */
@@ -97,6 +98,7 @@ const values = [
 /*  Page                                                               */
 /* ------------------------------------------------------------------ */
 export default function MissionPage() {
+  const c = useContent('mission')
   const { ref: heroRef, inView: heroInView } = useInView({ threshold: 0.2, triggerOnce: true })
   const { ref: missionRef, inView: missionInView } = useInView({ threshold: 0.2, triggerOnce: true })
   const { ref: visionRef, inView: visionInView } = useInView({ threshold: 0.2, triggerOnce: true })
@@ -123,7 +125,7 @@ export default function MissionPage() {
             Step of Hope Foundation
           </span>
           <h1 className="font-display text-[clamp(2.5rem,6vw,4.5rem)] font-bold text-navy leading-tight mb-6">
-            Our Mission
+            {c.hero_title}
           </h1>
           <div className="w-20 h-1 bg-hope rounded-full mx-auto" />
         </motion.div>
@@ -152,19 +154,14 @@ export default function MissionPage() {
             transition={{ duration: 0.7, delay: 0.15, ease }}
           >
             <h2 className="font-display text-3xl md:text-4xl font-semibold text-navy">
-              Our Mission
+              {c.mission_title}
             </h2>
             <div className="w-16 h-0.5 bg-hope" />
-            <p className="font-body text-navy-soft leading-relaxed text-[15px] md:text-base">
-              To bring joy, emotional support, hope, and meaningful experiences to children and
-              families facing serious illnesses and difficult medical journeys.
-            </p>
-            <p className="font-body text-navy-soft/70 leading-relaxed text-[15px]">
-              We believe that every child deserves to feel the warmth of compassion and the power of
-              community, especially during life's most challenging chapters. Through dedicated
-              programs and heartfelt outreach, we aim to lighten the burden and brighten the days of
-              those who need it most.
-            </p>
+            {(c.mission_text || '').split('\n').filter(Boolean).map((para, i) => (
+              <p key={i} className={`font-body leading-relaxed text-[15px] ${i === 0 ? 'text-navy-soft md:text-base' : 'text-navy-soft/70'}`}>
+                {para}
+              </p>
+            ))}
           </motion.div>
         </div>
       </section>
@@ -179,18 +176,14 @@ export default function MissionPage() {
             transition={{ duration: 0.7, ease }}
           >
             <h2 className="font-display text-3xl md:text-4xl font-semibold text-navy">
-              Our Vision
+              {c.vision_title}
             </h2>
             <div className="w-16 h-0.5 bg-hope" />
-            <p className="font-body text-navy-soft leading-relaxed text-[15px] md:text-base">
-              A world where every child fighting illness feels loved, supported, remembered, and
-              never alone.
-            </p>
-            <p className="font-body text-navy-soft/70 leading-relaxed text-[15px]">
-              We envision a future where compassion knows no boundaries, where communities rally
-              around families in need, and where every child's spirit is nurtured with love and
-              encouragement regardless of the obstacles they face.
-            </p>
+            {(c.vision_text || '').split('\n').filter(Boolean).map((para, i) => (
+              <p key={i} className={`font-body leading-relaxed text-[15px] ${i === 0 ? 'text-navy-soft md:text-base' : 'text-navy-soft/70'}`}>
+                {para}
+              </p>
+            ))}
           </motion.div>
 
           <motion.div

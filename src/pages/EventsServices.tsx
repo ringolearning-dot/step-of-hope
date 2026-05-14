@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import api, { getImageUrl } from '../lib/api';
+import useContent from '../lib/useContent';
 
 function SectionImage({ section, slot, fallback, className }: { section: string; slot: string; fallback: string; className?: string }) {
   const [src, setSrc] = useState<string | null>(null);
@@ -42,6 +43,14 @@ const galleryItems = [
 ];
 
 export default function EventsServices() {
+  const c = useContent('events');
+
+  const dynamicServices = services.map((s) => ({
+    ...s,
+    title: c[`${s.slot === '360booth' ? '360booth' : s.slot}_title`] || s.title,
+    description: c[`${s.slot === '360booth' ? '360booth' : s.slot}_text`] || s.description,
+  }));
+
   return (
     <div className="bg-bg-warm min-h-screen">
       {/* Hero */}
@@ -57,8 +66,7 @@ export default function EventsServices() {
             transition={{ duration: 0.7 }}
             className="font-display text-4xl md:text-6xl lg:text-7xl font-bold text-white leading-tight"
           >
-            Your Smile Can Create{' '}
-            <span className="text-hope-light">Another Smile</span>
+            {c.hero_title}
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -66,9 +74,7 @@ export default function EventsServices() {
             transition={{ duration: 0.7, delay: 0.2 }}
             className="font-body text-lg md:text-xl text-white/70 mt-6 max-w-3xl mx-auto leading-relaxed"
           >
-            We bring joy to every celebration with our photobooth, 360 video booth, and professional
-            photography services. Every booking supports our mission to bring hope to children and
-            families facing illness.
+            {c.hero_subtitle}
           </motion.p>
         </div>
       </section>
@@ -98,7 +104,7 @@ export default function EventsServices() {
         </motion.div>
 
         <div className="grid md:grid-cols-3 gap-8">
-          {services.map((service, i) => (
+          {dynamicServices.map((service, i) => (
             <motion.div
               key={service.slot}
               initial="hidden"
