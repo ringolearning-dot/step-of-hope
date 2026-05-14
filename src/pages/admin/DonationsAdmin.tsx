@@ -46,7 +46,7 @@ export default function DonationsAdmin() {
       setError('');
       try {
         const res = await api.get('/donations/admin/all');
-        const data: Donation[] = res.data;
+        const data: Donation[] = Array.isArray(res.data) ? res.data : res.data.donations || [];
         setDonations(data);
 
         const totalAmount = data.reduce((sum, d) => sum + d.amount, 0);

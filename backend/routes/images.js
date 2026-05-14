@@ -111,14 +111,24 @@ router.post('/:section/:slot', authenticateToken, upload.single('image'), async 
     const publicUrl = urlData?.publicUrl || null;
 
     // Insert into site_images table
-    const { error: insertError } = await supabase.from('site_images').insert({
+    const record = {
       section,
       slot,
       filename,
       original_name: req.file.originalname,
       mime_type: req.file.mimetype,
       public_url: publicUrl,
-    });
+    };
+
+    // Try with file_size first, fall back without it if column doesn't exist
+    let insertError;
+    const { error: err1 } = await supabase.from('site_images').insert({ ...record, file_size: req.file.size });
+    if (err1 && err1.message && err1.message.includes('file_size')) {
+      const { error: err2 } = await supabase.from('site_images').insert(record);
+      insertError = err2;
+    } else {
+      insertError = err1;
+    }
 
     if (insertError) {
       console.error('Image insert error:', insertError.message);

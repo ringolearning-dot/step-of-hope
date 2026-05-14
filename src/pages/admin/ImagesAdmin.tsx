@@ -8,7 +8,7 @@ interface SlotDef {
 }
 
 const IMAGE_SECTIONS: Record<string, string[]> = {
-  home: ['hero', 'story-preview', 'photobooth', 'yno', 'final-cta'],
+  home: ['hero', 'story-preview', 'yno-preview', 'cta'],
   story: ['section1', 'section2', 'section3', 'section4', 'section5', 'section6', 'section7'],
   impact: ['photo1', 'photo2', 'photo3', 'photo4', 'photo5', 'photo6'],
   events: [
@@ -21,7 +21,7 @@ const IMAGE_SECTIONS: Record<string, string[]> = {
     'gallery4',
     'gallery5',
   ],
-  mission: ['hero'],
+  mission: ['hero', 'vision'],
 };
 
 interface SlotState {
@@ -29,12 +29,19 @@ interface SlotState {
   deleting: boolean;
   filename: string | null;
   public_url: string | null;
+  file_size: number | null;
   progress: number;
   feedback: { type: 'success' | 'error'; message: string } | null;
 }
 
 function slotKey(section: string, slot: string) {
   return `${section}/${slot}`;
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 export default function ImagesAdmin() {
@@ -58,6 +65,7 @@ export default function ImagesAdmin() {
             deleting: false,
             filename: img.filename,
             public_url: img.public_url || null,
+            file_size: img.file_size || null,
             progress: 0,
             feedback: null,
           };
@@ -81,6 +89,7 @@ export default function ImagesAdmin() {
           deleting: false,
           filename: null,
           public_url: null,
+          file_size: null,
           progress: 0,
           feedback: null,
         }
@@ -126,6 +135,7 @@ export default function ImagesAdmin() {
         uploading: false,
         filename: res.data.filename || res.data.image?.filename,
         public_url: res.data.public_url || null,
+        file_size: res.data.file_size || null,
         progress: 100,
         feedback: { type: 'success', message: 'Uploaded' },
       });
@@ -247,7 +257,10 @@ export default function ImagesAdmin() {
 
                   {/* Info & Actions */}
                   <div className="p-3">
-                    <p className="text-sm font-medium text-gray-800 mb-2">{slot}</p>
+                    <p className="text-sm font-medium text-gray-800 mb-1">{slot}</p>
+                    {state.file_size && (
+                      <p className="text-xs text-gray-400 mb-2">{formatFileSize(state.file_size)}</p>
+                    )}
 
                     {/* Feedback */}
                     {state.feedback && (

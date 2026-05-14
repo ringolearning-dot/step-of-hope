@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS site_images (
   filename TEXT NOT NULL,
   original_name TEXT NOT NULL,
   mime_type TEXT NOT NULL,
+  file_size BIGINT,
   public_url TEXT,
   uploaded_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(section, slot)
