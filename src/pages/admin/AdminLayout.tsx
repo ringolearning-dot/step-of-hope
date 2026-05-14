@@ -8,6 +8,7 @@ import {
   HiUsers,
   HiEnvelope,
   HiCog6Tooth,
+  HiDocumentText,
 } from 'react-icons/hi2';
 import { HiBars3, HiXMark, HiArrowRightOnRectangle } from 'react-icons/hi2';
 
@@ -15,6 +16,7 @@ const navItems = [
   { to: '/admin', label: 'Dashboard', icon: HiChartBar, end: true },
   { to: '/admin/donations', label: 'Donations', icon: HiCurrencyDollar },
   { to: '/admin/images', label: 'Images', icon: HiPhoto },
+  { to: '/admin/content', label: 'Content', icon: HiDocumentText },
   { to: '/admin/volunteers', label: 'Volunteers', icon: HiUsers },
   { to: '/admin/contacts', label: 'Contacts', icon: HiEnvelope },
   { to: '/admin/settings', label: 'Settings', icon: HiCog6Tooth },

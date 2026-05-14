@@ -8,6 +8,7 @@ import imageRoutes from './routes/images.js';
 import donationRoutes from './routes/donations.js';
 import volunteerRoutes from './routes/volunteers.js';
 import contactRoutes from './routes/contact.js';
+import contentRoutes from './routes/content.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -31,6 +32,7 @@ app.use('/api/images', imageRoutes);
 app.use('/api/donations', donationRoutes);
 app.use('/api/volunteers', volunteerRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/content', contentRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

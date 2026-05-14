@@ -58,6 +58,15 @@ CREATE TABLE IF NOT EXISTS contacts (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS site_content (
+  id BIGSERIAL PRIMARY KEY,
+  page TEXT NOT NULL,
+  field_key TEXT NOT NULL,
+  field_value TEXT DEFAULT '',
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(page, field_key)
+);
+
 CREATE TABLE IF NOT EXISTS donation_stats (
   id BIGSERIAL PRIMARY KEY,
   total_raised INTEGER DEFAULT 0,

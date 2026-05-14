@@ -23,6 +23,7 @@ import ImagesAdmin from './pages/admin/ImagesAdmin';
 import VolunteersAdmin from './pages/admin/VolunteersAdmin';
 import ContactsAdmin from './pages/admin/ContactsAdmin';
 import SettingsAdmin from './pages/admin/SettingsAdmin';
+import ContentAdmin from './pages/admin/ContentAdmin';
 
 export default function App() {
   return (
@@ -61,6 +62,7 @@ export default function App() {
             <Route index element={<Dashboard />} />
             <Route path="donations" element={<DonationsAdmin />} />
             <Route path="images" element={<ImagesAdmin />} />
+            <Route path="content" element={<ContentAdmin />} />
             <Route path="volunteers" element={<VolunteersAdmin />} />
             <Route path="contacts" element={<ContactsAdmin />} />
             <Route path="settings" element={<SettingsAdmin />} />
