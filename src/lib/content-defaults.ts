@@ -48,7 +48,7 @@ const DEFAULTS: Record<string, Record<string, string>> = {
       "Through Serena\u2019s journey\u2009\u2014\u2009the hospitals, the waiting rooms, the endless treatments\u2009\u2014\u2009the family met other families fighting the same impossible fight. They saw the fear in other parents\u2019 eyes, the courage in other children\u2019s smiles.\n\nStep Of Hope was born from that shared struggle. A foundation built not from theory, but from lived experience, from sleepless nights and whispered prayers, from the belief that no family should face this darkness alone.\n\nSerena continues fighting today. And through her fight, a mission took root: to bring hope, smiles, and joy to every child and family walking this road.",
   },
   mission: {
-    hero_title: 'Our Mission & Vision',
+    hero_title: 'Our Mission',
     hero_subtitle:
       'Guided by compassion, driven by purpose — everything we do is rooted in the belief that no child should face illness alone.',
     mission_title: 'Our Mission',
@@ -59,15 +59,15 @@ const DEFAULTS: Record<string, Record<string, string>> = {
       'A world where every child fighting illness feels loved, supported, remembered, and never alone.\n\nWe envision a future where compassion knows no boundaries, where communities rally around families in need, and where every child\'s spirit is nurtured with love and encouragement regardless of the obstacles they face.',
   },
   impact: {
-    hero_title: 'Our Impact',
+    hero_title: 'Creating Smiles That Matter',
     hero_subtitle:
       'Every smile tells a story. See the moments that remind us why we do what we do.',
-    gallery_heading: 'Moments of Hope',
+    gallery_heading: 'Moments of Impact',
   },
   events: {
-    hero_title: 'Events & Services',
+    hero_title: 'Your Smile Can Create Another Smile',
     hero_subtitle:
-      'Book our professional services for your next event. Every booking directly supports our mission.',
+      'We bring joy to every celebration with our photobooth, 360 video booth, and professional photography services. Every booking supports our mission to bring hope to children and families facing illness.',
     photobooth_title: 'Photo Booth',
     photobooth_text:
       'Our premium photo booth captures unforgettable moments with fun props, instant prints, and digital sharing. Perfect for weddings, birthdays, and corporate events.',
@@ -79,9 +79,9 @@ const DEFAULTS: Record<string, Record<string, string>> = {
       'Professional photography services to capture every meaningful moment of your event with artistry and care.',
   },
   donate: {
-    hero_title: 'Make A Difference Today',
+    hero_title: 'Help Us Bring Hope',
     hero_subtitle:
-      'Your generosity brings hope, joy, and unforgettable moments to children and families facing illness.',
+      'Every donation, no matter the size, helps us bring comfort, joy, and support to children and families facing illness. Your generosity makes a real difference.',
   },
 };
 
