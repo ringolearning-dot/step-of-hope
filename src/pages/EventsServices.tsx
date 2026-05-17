@@ -21,16 +21,19 @@ const services = [
     title: 'Photobooth',
     slot: 'photobooth',
     description: 'Classic and modern photobooth setups with custom backdrops, props, and instant prints that make every event unforgettable.',
+    reserveLink: '/reserve/photobooth',
   },
   {
     title: '360 Video Booth',
     slot: '360booth',
     description: 'An immersive slow-motion 360-degree video experience that captures every angle and creates share-worthy content.',
+    reserveLink: '/reserve/360booth',
   },
   {
     title: 'Event Photography',
     slot: 'photography',
     description: 'Professional event photography that tells the story of your celebration with candid and posed shots alike.',
+    reserveLink: null,
   },
 ];
 
@@ -122,7 +125,15 @@ export default function EventsServices() {
               />
               <div className="p-8">
                 <h3 className="font-display text-xl font-bold text-navy mb-3">{service.title}</h3>
-                <p className="font-body text-navy/60 leading-relaxed">{service.description}</p>
+                <p className="font-body text-navy/60 leading-relaxed mb-4">{service.description}</p>
+                {service.reserveLink && (
+                  <Link
+                    to={service.reserveLink}
+                    className="inline-flex items-center justify-center px-6 py-2.5 bg-navy text-white font-display font-semibold text-sm rounded-lg hover:bg-navy-soft transition-colors duration-300"
+                  >
+                    Reserve Now
+                  </Link>
+                )}
               </div>
             </motion.div>
           ))}
@@ -211,16 +222,16 @@ export default function EventsServices() {
               className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-10"
             >
               <Link
-                to="/contact?type=photobooth"
+                to="/reserve/photobooth"
                 className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 bg-white text-navy font-display font-semibold rounded-xl hover:bg-white/90 transition-colors duration-300 shadow-lg"
               >
-                Book Photobooth
+                Reserve Photobooth
               </Link>
               <Link
-                to="/contact?type=360booth"
+                to="/reserve/360booth"
                 className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-4 bg-transparent text-white font-display font-semibold rounded-xl border-2 border-white hover:bg-white hover:text-navy transition-colors duration-300"
               >
-                Book 360 Booth
+                Reserve 360 Booth
               </Link>
               <Link
                 to="/contact"

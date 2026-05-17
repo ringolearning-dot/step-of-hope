@@ -9,6 +9,7 @@ import donationRoutes from './routes/donations.js';
 import volunteerRoutes from './routes/volunteers.js';
 import contactRoutes from './routes/contact.js';
 import contentRoutes from './routes/content.js';
+import reservationRoutes from './routes/reservations.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -19,8 +20,9 @@ app.use(cors({
   credentials: true
 }));
 
-// Stripe webhook needs raw body
+// Stripe webhooks need raw body
 app.use('/api/donations/webhook', express.raw({ type: 'application/json' }));
+app.use('/api/reservations/webhook', express.raw({ type: 'application/json' }));
 
 // JSON parser for everything else
 app.use(express.json({ limit: '10mb' }));
@@ -33,6 +35,7 @@ app.use('/api/donations', donationRoutes);
 app.use('/api/volunteers', volunteerRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/content', contentRoutes);
+app.use('/api/reservations', reservationRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

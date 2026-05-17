@@ -14,6 +14,7 @@ import EventsServices from './pages/EventsServices';
 import Donate from './pages/Donate';
 import Volunteer from './pages/Volunteer';
 import Contact from './pages/Contact';
+import ReservationPage from './pages/ReservationPage';
 
 import AdminLogin from './pages/admin/Login';
 import AdminLayout from './pages/admin/AdminLayout';
@@ -24,6 +25,7 @@ import VolunteersAdmin from './pages/admin/VolunteersAdmin';
 import ContactsAdmin from './pages/admin/ContactsAdmin';
 import SettingsAdmin from './pages/admin/SettingsAdmin';
 import ContentAdmin from './pages/admin/ContentAdmin';
+import ReservationsAdmin from './pages/admin/ReservationsAdmin';
 
 export default function App() {
   return (
@@ -48,6 +50,7 @@ export default function App() {
           <Route path="/donate" element={<Donate />} />
           <Route path="/volunteer" element={<Volunteer />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/reserve/:type" element={<ReservationPage />} />
 
           {/* Admin routes */}
           <Route path="/admin/login" element={<AdminLogin />} />
@@ -65,6 +68,7 @@ export default function App() {
             <Route path="content" element={<ContentAdmin />} />
             <Route path="volunteers" element={<VolunteersAdmin />} />
             <Route path="contacts" element={<ContactsAdmin />} />
+            <Route path="reservations" element={<ReservationsAdmin />} />
             <Route path="settings" element={<SettingsAdmin />} />
           </Route>
         </Routes>

@@ -32,6 +32,12 @@ interface ContactStats {
   unread: number;
 }
 
+interface ReservationStats {
+  total: number;
+  totalRevenue: number;
+  upcoming: number;
+}
+
 function formatCents(cents: number): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -51,20 +57,23 @@ export default function Dashboard() {
   const [stats, setStats] = useState<DonationStats | null>(null);
   const [volunteerStats, setVolunteerStats] = useState<VolunteerStats | null>(null);
   const [contactStats, setContactStats] = useState<ContactStats | null>(null);
+  const [reservationStats, setReservationStats] = useState<ReservationStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchAll = async () => {
       try {
-        const [donRes, volRes, conRes] = await Promise.all([
+        const [donRes, volRes, conRes, resRes] = await Promise.all([
           api.get('/donations/admin/stats'),
           api.get('/volunteers/admin/stats').catch(() => ({ data: null })),
           api.get('/contacts/admin/stats').catch(() => ({ data: null })),
+          api.get('/reservations/admin/stats').catch(() => ({ data: null })),
         ]);
         setStats(donRes.data);
         setVolunteerStats(volRes.data);
         setContactStats(conRes.data);
+        setReservationStats(resRes.data);
       } catch (err: any) {
         setError('Failed to load dashboard data.');
       } finally {
@@ -177,6 +186,25 @@ export default function Dashboard() {
               <div>
                 <p className="text-xl font-bold text-emerald-600">{contactStats.unread}</p>
                 <p className="text-xs text-gray-500">Unread</p>
+              </div>
+            </div>
+          </div>
+        )}
+        {reservationStats && (
+          <div className="bg-white rounded-xl border border-gray-200 p-5">
+            <h3 className="text-sm font-medium text-gray-500 mb-2">Reservations</h3>
+            <div className="flex items-baseline gap-4">
+              <div>
+                <p className="text-xl font-bold text-gray-900">{reservationStats.total}</p>
+                <p className="text-xs text-gray-500">Total</p>
+              </div>
+              <div>
+                <p className="text-xl font-bold text-blue-600">{reservationStats.upcoming}</p>
+                <p className="text-xs text-gray-500">Upcoming</p>
+              </div>
+              <div>
+                <p className="text-xl font-bold text-emerald-600">{formatCents(reservationStats.totalRevenue)}</p>
+                <p className="text-xs text-gray-500">Revenue</p>
               </div>
             </div>
           </div>

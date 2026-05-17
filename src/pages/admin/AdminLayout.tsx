@@ -9,12 +9,14 @@ import {
   HiEnvelope,
   HiCog6Tooth,
   HiDocumentText,
+  HiCalendarDays,
 } from 'react-icons/hi2';
 import { HiBars3, HiXMark, HiArrowRightOnRectangle } from 'react-icons/hi2';
 
 const navItems = [
   { to: '/admin', label: 'Dashboard', icon: HiChartBar, end: true },
   { to: '/admin/donations', label: 'Donations', icon: HiCurrencyDollar },
+  { to: '/admin/reservations', label: 'Reservations', icon: HiCalendarDays },
   { to: '/admin/images', label: 'Images', icon: HiPhoto },
   { to: '/admin/content', label: 'Content', icon: HiDocumentText },
   { to: '/admin/volunteers', label: 'Volunteers', icon: HiUsers },
