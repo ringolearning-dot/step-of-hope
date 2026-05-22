@@ -10,6 +10,7 @@ import volunteerRoutes from './routes/volunteers.js';
 import contactRoutes from './routes/contact.js';
 import contentRoutes from './routes/content.js';
 import reservationRoutes from './routes/reservations.js';
+import volunteerAppRoutes from './routes/volunteer-applications.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -36,6 +37,7 @@ app.use('/api/volunteers', volunteerRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/content', contentRoutes);
 app.use('/api/reservations', reservationRoutes);
+app.use('/api/volunteer-applications', volunteerAppRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
