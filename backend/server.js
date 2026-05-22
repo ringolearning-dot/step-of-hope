@@ -11,6 +11,16 @@ import contactRoutes from './routes/contact.js';
 import contentRoutes from './routes/content.js';
 import reservationRoutes from './routes/reservations.js';
 import volunteerAppRoutes from './routes/volunteer-applications.js';
+import expenseRoutes from './routes/expenses.js';
+import recurringBillRoutes from './routes/recurring-bills.js';
+import calendarBlockRoutes from './routes/calendar-blocks.js';
+import activityLogRoutes from './routes/activity-logs.js';
+import notificationRoutes from './routes/notifications.js';
+import aiAssistantRoutes from './routes/ai-assistant.js';
+import reportRoutes from './routes/reports.js';
+import dailyEmailRoutes from './routes/daily-emails.js';
+import adminUserRoutes from './routes/admin-users.js';
+import { runDailyReport } from './routes/daily-emails.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -38,6 +48,15 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/content', contentRoutes);
 app.use('/api/reservations', reservationRoutes);
 app.use('/api/volunteer-applications', volunteerAppRoutes);
+app.use('/api/expenses', expenseRoutes);
+app.use('/api/recurring-bills', recurringBillRoutes);
+app.use('/api/calendar', calendarBlockRoutes);
+app.use('/api/activity-logs', activityLogRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/ai-assistant', aiAssistantRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/daily-emails', dailyEmailRoutes);
+app.use('/api/admin-users', adminUserRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -55,4 +74,23 @@ app.get('/api/health', (req, res) => {
   app.listen(PORT, () => {
     console.log(`Step of Hope API running on port ${PORT}`);
   });
+
+  // Schedule daily report at midnight
+  scheduleDailyReport();
 })();
+
+function scheduleDailyReport() {
+  const now = new Date();
+  const midnight = new Date(now);
+  midnight.setDate(midnight.getDate() + 1);
+  midnight.setHours(0, 0, 0, 0);
+  const msUntilMidnight = midnight - now;
+
+  setTimeout(() => {
+    runDailyReport();
+    // Then repeat every 24 hours
+    setInterval(runDailyReport, 24 * 60 * 60 * 1000);
+  }, msUntilMidnight);
+
+  console.log(`Daily report scheduled. Next run in ${Math.round(msUntilMidnight / 1000 / 60)} minutes.`);
+}

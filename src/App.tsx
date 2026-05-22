@@ -26,6 +26,14 @@ import ContactsAdmin from './pages/admin/ContactsAdmin';
 import SettingsAdmin from './pages/admin/SettingsAdmin';
 import ContentAdmin from './pages/admin/ContentAdmin';
 import ReservationsAdmin from './pages/admin/ReservationsAdmin';
+import ExpensesAdmin from './pages/admin/ExpensesAdmin';
+import RecurringBillsAdmin from './pages/admin/RecurringBillsAdmin';
+import CalendarAdmin from './pages/admin/CalendarAdmin';
+import AIAssistantAdmin from './pages/admin/AIAssistantAdmin';
+import ReportsAdmin from './pages/admin/ReportsAdmin';
+import ActivityLogsAdmin from './pages/admin/ActivityLogsAdmin';
+import NotificationsAdmin from './pages/admin/NotificationsAdmin';
+import AdminUsersAdmin from './pages/admin/AdminUsersAdmin';
 
 export default function App() {
   return (
@@ -64,11 +72,19 @@ export default function App() {
           >
             <Route index element={<Dashboard />} />
             <Route path="donations" element={<DonationsAdmin />} />
-            <Route path="images" element={<ImagesAdmin />} />
-            <Route path="content" element={<ContentAdmin />} />
+            <Route path="expenses" element={<ExpensesAdmin />} />
+            <Route path="recurring-bills" element={<RecurringBillsAdmin />} />
+            <Route path="reports" element={<ReportsAdmin />} />
+            <Route path="reservations" element={<ReservationsAdmin />} />
+            <Route path="calendar" element={<CalendarAdmin />} />
             <Route path="volunteers" element={<VolunteersAdmin />} />
             <Route path="contacts" element={<ContactsAdmin />} />
-            <Route path="reservations" element={<ReservationsAdmin />} />
+            <Route path="content" element={<ContentAdmin />} />
+            <Route path="images" element={<ImagesAdmin />} />
+            <Route path="ai-assistant" element={<AIAssistantAdmin />} />
+            <Route path="users" element={<AdminUsersAdmin />} />
+            <Route path="activity-logs" element={<ActivityLogsAdmin />} />
+            <Route path="notifications" element={<NotificationsAdmin />} />
             <Route path="settings" element={<SettingsAdmin />} />
           </Route>
         </Routes>

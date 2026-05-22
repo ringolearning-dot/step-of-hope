@@ -29,15 +29,18 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid credentials.' });
     }
 
+    // Update last login
+    await supabase.from('admins').update({ last_login: new Date().toISOString() }).eq('id', admin.id);
+
     const token = jwt.sign(
-      { id: admin.id, email: admin.email, name: admin.name },
+      { id: admin.id, email: admin.email, name: admin.name, role: admin.role || 'admin' },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 
     res.json({
       token,
-      admin: { id: admin.id, email: admin.email, name: admin.name }
+      admin: { id: admin.id, email: admin.email, name: admin.name, role: admin.role || 'admin' }
     });
   } catch (err) {
     console.error('Login error:', err.message);
@@ -49,7 +52,7 @@ router.get('/me', authenticateToken, async (req, res) => {
   try {
     const { data: admin, error } = await supabase
       .from('admins')
-      .select('id, email, name, created_at')
+      .select('id, email, name, role, is_active, avatar_url, created_at')
       .eq('id', req.admin.id)
       .single();
 

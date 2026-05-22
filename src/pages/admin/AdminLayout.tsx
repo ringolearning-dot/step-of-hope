@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import api from '../../lib/api';
 import {
   HiChartBar,
   HiCurrencyDollar,
@@ -10,24 +11,72 @@ import {
   HiCog6Tooth,
   HiDocumentText,
   HiCalendarDays,
+  HiReceiptPercent,
+  HiBanknotes,
+  HiClipboardDocumentList,
+  HiSparkles,
+  HiBell,
+  HiShieldCheck,
+  HiClock,
+  HiUserGroup,
 } from 'react-icons/hi2';
 import { HiBars3, HiXMark, HiArrowRightOnRectangle } from 'react-icons/hi2';
 
-const navItems = [
-  { to: '/admin', label: 'Dashboard', icon: HiChartBar, end: true },
-  { to: '/admin/donations', label: 'Donations', icon: HiCurrencyDollar },
-  { to: '/admin/reservations', label: 'Reservations', icon: HiCalendarDays },
-  { to: '/admin/images', label: 'Images', icon: HiPhoto },
-  { to: '/admin/content', label: 'Content', icon: HiDocumentText },
-  { to: '/admin/volunteers', label: 'Volunteers', icon: HiUsers },
-  { to: '/admin/contacts', label: 'Contacts', icon: HiEnvelope },
-  { to: '/admin/settings', label: 'Settings', icon: HiCog6Tooth },
+const navSections = [
+  {
+    title: 'Overview',
+    items: [
+      { to: '/admin', label: 'Dashboard', icon: HiChartBar, end: true },
+      { to: '/admin/notifications', label: 'Notifications', icon: HiBell },
+    ],
+  },
+  {
+    title: 'Finance',
+    items: [
+      { to: '/admin/donations', label: 'Donations', icon: HiCurrencyDollar },
+      { to: '/admin/expenses', label: 'Expenses', icon: HiReceiptPercent },
+      { to: '/admin/recurring-bills', label: 'Recurring Bills', icon: HiBanknotes },
+      { to: '/admin/reports', label: 'Reports', icon: HiClipboardDocumentList },
+    ],
+  },
+  {
+    title: 'Operations',
+    items: [
+      { to: '/admin/reservations', label: 'Reservations', icon: HiCalendarDays },
+      { to: '/admin/calendar', label: 'Calendar', icon: HiCalendarDays },
+      { to: '/admin/volunteers', label: 'Volunteers', icon: HiUsers },
+      { to: '/admin/contacts', label: 'Contacts', icon: HiEnvelope },
+    ],
+  },
+  {
+    title: 'Content',
+    items: [
+      { to: '/admin/content', label: 'Page Content', icon: HiDocumentText },
+      { to: '/admin/images', label: 'Images', icon: HiPhoto },
+    ],
+  },
+  {
+    title: 'System',
+    items: [
+      { to: '/admin/ai-assistant', label: 'AI Assistant', icon: HiSparkles },
+      { to: '/admin/users', label: 'Admin Users', icon: HiUserGroup },
+      { to: '/admin/activity-logs', label: 'Activity Logs', icon: HiClock },
+      { to: '/admin/settings', label: 'Settings', icon: HiCog6Tooth },
+    ],
+  },
 ];
 
 export default function AdminLayout() {
   const { admin, logout } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    api.get('/notifications/admin/unread-count')
+      .then(res => setUnreadCount(res.data.count))
+      .catch(() => {});
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -35,7 +84,7 @@ export default function AdminLayout() {
   };
 
   const linkClasses = ({ isActive }: { isActive: boolean }) =>
-    `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition ${
+    `flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition ${
       isActive
         ? 'bg-white/10 text-white'
         : 'text-slate-300 hover:bg-white/5 hover:text-white'
@@ -44,9 +93,9 @@ export default function AdminLayout() {
   const SidebarContent = () => (
     <>
       {/* Brand */}
-      <div className="px-5 py-6 border-b border-white/10">
+      <div className="px-5 py-5 border-b border-white/10">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-white/10 rounded-lg flex items-center justify-center">
+          <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-sm">SH</span>
           </div>
           <div>
@@ -57,18 +106,28 @@ export default function AdminLayout() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.end}
-            className={linkClasses}
-            onClick={() => setSidebarOpen(false)}
-          >
-            <item.icon className="w-5 h-5 flex-shrink-0" />
-            {item.label}
-          </NavLink>
+      <nav className="flex-1 px-3 py-3 space-y-4 overflow-y-auto">
+        {navSections.map((section) => (
+          <div key={section.title}>
+            <p className="px-4 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500">{section.title}</p>
+            <div className="space-y-0.5">
+              {section.items.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.end}
+                  className={linkClasses}
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <item.icon className="w-4.5 h-4.5 flex-shrink-0" />
+                  <span className="flex-1">{item.label}</span>
+                  {item.label === 'Notifications' && unreadCount > 0 && (
+                    <span className="w-5 h-5 bg-red-500 text-white text-[10px] rounded-full flex items-center justify-center">{unreadCount}</span>
+                  )}
+                </NavLink>
+              ))}
+            </div>
+          </div>
         ))}
       </nav>
 
@@ -82,7 +141,7 @@ export default function AdminLayout() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-white text-sm font-medium truncate">{admin?.name || 'Admin'}</p>
-            <p className="text-slate-400 text-xs truncate">{admin?.email}</p>
+            <p className="text-slate-400 text-xs truncate">{admin?.role === 'super_admin' ? 'Super Admin' : admin?.role || 'Admin'}</p>
           </div>
         </div>
       </div>
@@ -127,7 +186,7 @@ export default function AdminLayout() {
       <div className="flex-1 lg:pl-64 flex flex-col min-h-screen">
         {/* Top bar */}
         <header className="sticky top-0 z-30 bg-white border-b border-gray-200">
-          <div className="flex items-center justify-between h-16 px-4 sm:px-6">
+          <div className="flex items-center justify-between h-14 px-4 sm:px-6">
             <button
               onClick={() => setSidebarOpen(true)}
               className="lg:hidden p-2 -ml-2 text-gray-500 hover:text-gray-700 rounded-lg"
@@ -137,7 +196,7 @@ export default function AdminLayout() {
 
             <div className="hidden lg:block" />
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <span className="text-sm text-gray-600 hidden sm:block">
                 {admin?.name || 'Admin'}
               </span>
