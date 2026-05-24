@@ -33,14 +33,32 @@ function SectionImage({
   className?: string;
 }) {
   const [src, setSrc] = useState<string | null>(null);
+  const [mimeType, setMimeType] = useState<string | null>(null);
   useEffect(() => {
     api
       .get(`/images/${section}/${slot}`)
-      .then((res) => setSrc(res.data.public_url || getImageUrl(res.data.filename)))
+      .then((res) => {
+        setSrc(res.data.public_url || getImageUrl(res.data.filename));
+        setMimeType(res.data.mime_type || null);
+      })
       .catch(() => {});
   }, [section, slot]);
 
-  if (src) return <img src={src} alt={fallback} className={className} />;
+  if (src) {
+    if (mimeType?.startsWith('video/')) {
+      return (
+        <video
+          src={src}
+          className={className}
+          autoPlay
+          loop
+          muted
+          playsInline
+        />
+      );
+    }
+    return <img src={src} alt={fallback} className={className} />;
+  }
   return (
     <div
       className={`bg-gradient-to-br from-navy/10 to-hope/10 flex items-center justify-center text-navy/30 text-sm ${className}`}

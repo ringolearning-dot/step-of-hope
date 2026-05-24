@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import api, { getImageUrl } from '../../lib/api';
-import { HiPhoto, HiArrowUpTray, HiTrash, HiCheckCircle, HiXCircle } from 'react-icons/hi2';
+import { HiPhoto, HiArrowUpTray, HiTrash, HiCheckCircle, HiXCircle, HiVideoCamera } from 'react-icons/hi2';
 
 interface SlotDef {
   section: string;
@@ -29,6 +29,7 @@ interface SlotState {
   deleting: boolean;
   filename: string | null;
   public_url: string | null;
+  mime_type: string | null;
   file_size: number | null;
   progress: number;
   feedback: { type: 'success' | 'error'; message: string } | null;
@@ -65,6 +66,7 @@ export default function ImagesAdmin() {
             deleting: false,
             filename: img.filename,
             public_url: img.public_url || null,
+            mime_type: img.mime_type || null,
             file_size: img.file_size || null,
             progress: 0,
             feedback: null,
@@ -89,6 +91,7 @@ export default function ImagesAdmin() {
           deleting: false,
           filename: null,
           public_url: null,
+          mime_type: null,
           file_size: null,
           progress: 0,
           feedback: null,
@@ -135,6 +138,7 @@ export default function ImagesAdmin() {
         uploading: false,
         filename: res.data.filename || res.data.image?.filename,
         public_url: res.data.public_url || null,
+        mime_type: res.data.mime_type || null,
         file_size: res.data.file_size || null,
         progress: 100,
         feedback: { type: 'success', message: 'Uploaded' },
@@ -219,18 +223,29 @@ export default function ImagesAdmin() {
                   key={refKey}
                   className="bg-white rounded-xl border border-gray-200 overflow-hidden"
                 >
-                  {/* Image / Placeholder */}
+                  {/* Image/Video Preview / Placeholder */}
                   <div className="aspect-video bg-gray-100 relative flex items-center justify-center overflow-hidden">
                     {state.filename ? (
-                      <img
-                        src={state.public_url || getImageUrl(state.filename!)}
-                        alt={`${section} - ${slot}`}
-                        className="w-full h-full object-cover"
-                      />
+                      state.mime_type?.startsWith('video/') ? (
+                        <video
+                          src={state.public_url || getImageUrl(state.filename!)}
+                          className="w-full h-full object-cover"
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                        />
+                      ) : (
+                        <img
+                          src={state.public_url || getImageUrl(state.filename!)}
+                          alt={`${section} - ${slot}`}
+                          className="w-full h-full object-cover"
+                        />
+                      )
                     ) : (
                       <div className="flex flex-col items-center text-gray-300">
                         <HiPhoto className="w-10 h-10" />
-                        <span className="text-xs mt-1">No image</span>
+                        <span className="text-xs mt-1">No media</span>
                       </div>
                     )}
 
@@ -257,7 +272,12 @@ export default function ImagesAdmin() {
 
                   {/* Info & Actions */}
                   <div className="p-3">
-                    <p className="text-sm font-medium text-gray-800 mb-1">{slot}</p>
+                    <p className="text-sm font-medium text-gray-800 mb-1 flex items-center gap-1.5">
+                      {slot}
+                      {state.mime_type?.startsWith('video/') && (
+                        <HiVideoCamera className="w-3.5 h-3.5 text-blue-500" title="Video" />
+                      )}
+                    </p>
                     {state.file_size && (
                       <p className="text-xs text-gray-400 mb-2">{formatFileSize(state.file_size)}</p>
                     )}
@@ -282,7 +302,7 @@ export default function ImagesAdmin() {
                       {/* Hidden file input */}
                       <input
                         type="file"
-                        accept="image/*"
+                        accept="image/*,video/mp4,video/webm,video/quicktime"
                         className="hidden"
                         ref={(el) => {
                           fileInputRefs.current[refKey] = el;
