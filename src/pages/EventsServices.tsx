@@ -104,12 +104,12 @@ export default function EventsServices() {
               custom={i}
               className="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-shadow duration-500"
             >
-              <div className="bg-navy/5 overflow-hidden">
+              <div className="bg-black overflow-hidden rounded-t-2xl">
                 <SectionImage
                   section="events"
                   slot={service.slot}
                   fallback={service.title}
-                  className="w-full h-[28rem] object-contain group-hover:scale-105 transition-transform duration-500"
+                  className="w-full h-auto object-contain group-hover:scale-105 transition-transform duration-500"
                 />
               </div>
               <div className="p-8">
