@@ -29,12 +29,6 @@ const services = [
     description: 'An immersive slow-motion 360-degree video experience that captures every angle and creates share-worthy content.',
     reserveLink: '/reserve/360booth',
   },
-  {
-    title: 'Event Photography',
-    slot: 'photography',
-    description: 'Professional event photography that tells the story of your celebration with candid and posed shots alike.',
-    reserveLink: null,
-  },
 ];
 
 const galleryItems = [
