@@ -20,6 +20,7 @@ const IMAGE_SECTIONS: Record<string, string[]> = {
     'gallery3',
     'gallery4',
     'gallery5',
+    'both',
   ],
   mission: ['hero', 'vision'],
 };

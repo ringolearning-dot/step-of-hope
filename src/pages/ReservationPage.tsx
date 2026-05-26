@@ -5,7 +5,7 @@ import toast from 'react-hot-toast';
 import api from '../lib/api';
 import { FaCamera, FaVideo, FaCalendarDays, FaUser, FaCreditCard, FaCheck, FaChevronLeft, FaChevronRight } from 'react-icons/fa6';
 
-type ServiceType = 'photobooth' | '360booth';
+type ServiceType = 'photobooth' | '360booth' | 'both';
 
 interface FormData {
   fullName: string;
@@ -54,6 +54,10 @@ const backdropOptions = [
   'Rustic Wood',
   'Custom (describe below)',
 ];
+
+function serviceName(t: ServiceType) {
+  return t === 'photobooth' ? 'Photobooth' : t === '360booth' ? '360 Video Booth' : 'Photo Booth + 360 Booth';
+}
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -214,6 +218,11 @@ function calculateTotal(serviceType: ServiceType, form: FormData) {
     const extraHours = Math.max(0, form.numHours - 3);
     extras += extraHours * 150;
     if (form.customBackdrop) extras += 200;
+  } else if (serviceType === 'both') {
+    base = 1300;
+    const extraHours = Math.max(0, form.numHours - 3);
+    extras += extraHours * 250;
+    if (form.customBackdrop) extras += 200;
   } else {
     base = form.withTent ? 750 : 600;
     const extraHours = Math.max(0, form.numHours - 3);
@@ -226,7 +235,7 @@ function calculateTotal(serviceType: ServiceType, form: FormData) {
 export default function ReservationPage() {
   const { type } = useParams<{ type: string }>();
   const [searchParams] = useSearchParams();
-  const serviceType: ServiceType = type === '360booth' ? '360booth' : 'photobooth';
+  const serviceType: ServiceType = type === '360booth' ? '360booth' : type === 'both' ? 'both' : 'photobooth';
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -345,7 +354,7 @@ export default function ReservationPage() {
   const steps = [
     { num: 1, label: 'Date & Time', icon: FaCalendarDays },
     { num: 2, label: 'Details', icon: FaUser },
-    { num: 3, label: 'Package', icon: serviceType === 'photobooth' ? FaCamera : FaVideo },
+    { num: 3, label: 'Package', icon: serviceType === '360booth' ? FaVideo : FaCamera },
     { num: 4, label: 'Payment', icon: FaCreditCard },
   ];
 
@@ -424,8 +433,8 @@ export default function ReservationPage() {
             animate={{ opacity: 1, y: 0 }}
             className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-white/80 text-sm font-body mb-6"
           >
-            {serviceType === 'photobooth' ? <FaCamera /> : <FaVideo />}
-            {serviceType === 'photobooth' ? 'Photobooth' : '360 Video Booth'}
+            {serviceType === '360booth' ? <FaVideo /> : <FaCamera />}
+            {serviceName(serviceType)}
           </motion.div>
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
@@ -433,7 +442,7 @@ export default function ReservationPage() {
             transition={{ delay: 0.1 }}
             className="font-display text-4xl md:text-6xl font-bold text-white leading-tight"
           >
-            Reserve Your {serviceType === 'photobooth' ? 'Photobooth' : '360 Video Booth'}
+            Reserve Your {serviceName(serviceType)}
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -708,17 +717,45 @@ export default function ReservationPage() {
                   {/* Package pricing display */}
                   <div className="bg-white rounded-2xl shadow-sm border border-navy/10 p-6 mb-6">
                     <div className="flex items-center gap-3 mb-4">
-                      {serviceType === 'photobooth' ? (
-                        <FaCamera className="w-6 h-6 text-hope" />
-                      ) : (
+                      {serviceType === '360booth' ? (
                         <FaVideo className="w-6 h-6 text-hope" />
+                      ) : (
+                        <FaCamera className="w-6 h-6 text-hope" />
                       )}
                       <h3 className="font-display text-xl font-bold text-navy">
-                        {serviceType === 'photobooth' ? 'Photobooth' : '360 Video Booth'}
+                        {serviceName(serviceType)}
                       </h3>
                     </div>
 
-                    {serviceType === 'photobooth' ? (
+                    {serviceType === 'both' ? (
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center py-2 border-b border-navy/5">
+                          <span className="font-body text-navy/70">Photo Booth + 360 Booth (3hrs base)</span>
+                          <span className="font-display font-bold text-navy">$1,300</span>
+                        </div>
+                        <div className="flex justify-between items-center py-2 border-b border-navy/5">
+                          <span className="font-body text-navy/70">Extra Hour</span>
+                          <span className="font-display font-bold text-navy">$250/hr</span>
+                        </div>
+                        <div className="flex justify-between items-center py-2">
+                          <span className="font-body text-navy/70">Custom Backdrop</span>
+                          <span className="font-display font-bold text-navy">+$200</span>
+                        </div>
+                        <div className="pt-4 mt-4 border-t border-navy/10">
+                          <label className="flex items-center gap-3 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={form.customBackdrop}
+                              onChange={(e) => update('customBackdrop', e.target.checked)}
+                              className="w-5 h-5 rounded border-navy/20 text-navy focus:ring-hope accent-navy"
+                            />
+                            <span className="font-body text-navy font-medium">
+                              Add Custom Backdrop (+$200)
+                            </span>
+                          </label>
+                        </div>
+                      </div>
+                    ) : serviceType === 'photobooth' ? (
                       <div className="space-y-3">
                         <div className="flex justify-between items-center py-2 border-b border-navy/5">
                           <span className="font-body text-navy/70">3 Hours (base)</span>
@@ -796,7 +833,7 @@ export default function ReservationPage() {
                     <h4 className="font-display font-bold text-lg mb-3">Price Summary</h4>
                     <div className="space-y-2 text-white/80 text-sm font-body">
                       <div className="flex justify-between">
-                        <span>Base Package ({serviceType === 'photobooth' ? '3hrs' : form.withTent ? 'w/ tent' : 'no tent'})</span>
+                        <span>Base Package ({serviceType === 'both' ? 'both 3hrs' : serviceType === 'photobooth' ? '3hrs' : form.withTent ? 'w/ tent' : 'no tent'})</span>
                         <span>${pricing.base}</span>
                       </div>
                       {form.numHours > 3 && (
@@ -805,7 +842,7 @@ export default function ReservationPage() {
                           <span>${(form.numHours - 3) * 150}</span>
                         </div>
                       )}
-                      {serviceType === 'photobooth' && form.customBackdrop && (
+                      {(serviceType === 'photobooth' || serviceType === 'both') && form.customBackdrop && (
                         <div className="flex justify-between">
                           <span>Custom Backdrop</span>
                           <span>$200</span>
@@ -914,7 +951,7 @@ export default function ReservationPage() {
                       <div>
                         <span className="text-navy/50 block">Service</span>
                         <span className="text-navy font-medium">
-                          {serviceType === 'photobooth' ? 'Photobooth' : '360 Video Booth'}
+                          {serviceName(serviceType)}
                         </span>
                       </div>
                       <div>
@@ -980,7 +1017,7 @@ export default function ReservationPage() {
                           <span>${(form.numHours - 3) * 150}</span>
                         </div>
                       )}
-                      {serviceType === 'photobooth' && form.customBackdrop && (
+                      {(serviceType === 'photobooth' || serviceType === 'both') && form.customBackdrop && (
                         <div className="flex justify-between text-navy/60 mb-1">
                           <span>Custom Backdrop</span>
                           <span>$200</span>

@@ -29,6 +29,12 @@ const services = [
     description: 'An immersive slow-motion 360-degree video experience that captures every angle and creates share-worthy content.',
     reserveLink: '/reserve/360booth',
   },
+  {
+    title: 'Both',
+    slot: 'both',
+    description: 'Get the best of both worlds — combine the Photo Booth and 360 Video Booth for the ultimate event experience your guests will never forget.',
+    reserveLink: '/reserve/both',
+  },
 ];
 
 
@@ -37,8 +43,8 @@ export default function EventsServices() {
 
   const dynamicServices = services.map((s) => ({
     ...s,
-    title: c[`${s.slot === '360booth' ? '360booth' : s.slot}_title`] || s.title,
-    description: c[`${s.slot === '360booth' ? '360booth' : s.slot}_text`] || s.description,
+    title: c[`${s.slot}_title`] || s.title,
+    description: c[`${s.slot}_text`] || s.description,
   }));
 
   return (
@@ -93,7 +99,7 @@ export default function EventsServices() {
           </motion.p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {dynamicServices.map((service, i) => (
             <motion.div
               key={service.slot}
