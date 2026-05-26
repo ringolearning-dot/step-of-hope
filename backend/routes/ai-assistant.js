@@ -6,7 +6,7 @@ import { authenticateToken } from '../middleware/auth.js';
 const router = Router();
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
 const SYSTEM_PROMPT = `You are the Step of Hope AI Assistant — a helpful, friendly assistant for admins of the "Step of Hope" nonprofit organization.
 
