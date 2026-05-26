@@ -19,16 +19,32 @@ function SectionImage({
   className?: string;
 }) {
   const [src, setSrc] = useState<string | null>(null);
+  const [isVideo, setIsVideo] = useState(false);
 
   useEffect(() => {
     api
       .get(`/images/${section}/${slot}`)
-      .then((res) => setSrc(res.data.public_url || getImageUrl(res.data.filename)))
+      .then((res) => {
+        setSrc(res.data.public_url || getImageUrl(res.data.filename));
+        setIsVideo(res.data.mime_type?.startsWith('video/'));
+      })
       .catch(() => {});
   }, [section, slot]);
 
-  if (src)
+  if (src) {
+    if (isVideo)
+      return (
+        <video
+          src={src}
+          className={className}
+          autoPlay
+          loop
+          muted
+          playsInline
+        />
+      );
     return <img src={src} alt={fallback} className={className} loading="lazy" />;
+  }
 
   return (
     <div
