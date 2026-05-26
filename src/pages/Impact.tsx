@@ -74,25 +74,30 @@ export default function Impact() {
       {/* ── Hero ─────────────────────────────────────────────────── */}
       <section
         ref={heroRef}
-        className="relative min-h-[60vh] flex items-center justify-center overflow-hidden px-4 py-32"
+        className="relative overflow-hidden bg-gradient-to-br from-navy via-navy-soft to-navy py-28 md:py-40"
       >
-        <div className="absolute -top-40 right-0 w-[500px] h-[500px] bg-hope/5 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 -left-32 w-80 h-80 bg-navy/5 rounded-full blur-3xl pointer-events-none" />
-
-        <motion.div
-          className="relative z-10 text-center max-w-3xl mx-auto"
-          initial={{ opacity: 0, y: 40 }}
-          animate={heroInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8, ease }}
-        >
-          <span className="inline-block font-body text-hope font-semibold tracking-widest uppercase text-sm mb-4">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-hope blur-[120px]" />
+          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full bg-hope-light blur-[100px]" />
+        </div>
+        <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
+          <motion.span
+            className="inline-block font-body text-hope-light font-semibold tracking-widest uppercase text-sm mb-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={heroInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.7, ease }}
+          >
             Our Impact
-          </span>
-          <h1 className="font-display text-[clamp(2.5rem,6vw,4.5rem)] font-bold text-navy leading-tight mb-6">
+          </motion.span>
+          <motion.h1
+            className="font-display text-4xl md:text-6xl lg:text-7xl font-bold text-white leading-tight"
+            initial={{ opacity: 0, y: 20 }}
+            animate={heroInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.7, delay: 0.1, ease }}
+          >
             {c.hero_title}
-          </h1>
-          <div className="w-20 h-1 bg-hope rounded-full mx-auto" />
-        </motion.div>
+          </motion.h1>
+        </div>
       </section>
 
       {/* ── Text Block ───────────────────────────────────────────── */}
