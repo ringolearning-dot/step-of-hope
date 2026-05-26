@@ -30,7 +30,7 @@ const services = [
     reserveLink: '/reserve/360booth',
   },
   {
-    title: 'Both',
+    title: 'Full Package',
     slot: 'both',
     description: 'Get the best of both worlds — combine the Photo Booth and 360 Video Booth for the ultimate event experience your guests will never forget.',
     reserveLink: '/reserve/both',

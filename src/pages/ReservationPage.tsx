@@ -56,7 +56,7 @@ const backdropOptions = [
 ];
 
 function serviceName(t: ServiceType) {
-  return t === 'photobooth' ? 'Photobooth' : t === '360booth' ? '360 Video Booth' : 'Photo Booth + 360 Booth';
+  return t === 'photobooth' ? 'Photobooth' : t === '360booth' ? '360 Video Booth' : 'Full Package';
 }
 
 const fadeUp = {
