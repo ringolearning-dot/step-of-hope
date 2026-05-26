@@ -30,8 +30,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       api.get('/auth/me').then(res => {
         setAdmin(res.data);
         localStorage.setItem('admin_user', JSON.stringify(res.data));
-      }).catch(() => {
-        logout();
+      }).catch((err) => {
+        const status = err.response?.status;
+        if (status === 401 || status === 403) {
+          logout();
+        }
       });
     }
   }, []);
