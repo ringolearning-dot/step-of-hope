@@ -108,7 +108,7 @@ export default function EventsServices() {
                 section="events"
                 slot={service.slot}
                 fallback={service.title}
-                className="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-500"
+                className="w-full h-[28rem] object-cover group-hover:scale-105 transition-transform duration-500"
               />
               <div className="p-8">
                 <h3 className="font-display text-xl font-bold text-navy mb-3">{service.title}</h3>
