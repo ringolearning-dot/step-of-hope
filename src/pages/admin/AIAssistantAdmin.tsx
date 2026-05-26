@@ -29,6 +29,23 @@ const SUGGESTIONS = [
   "What happened today?",
 ];
 
+function formatMarkdown(text: string): string {
+  return text
+    // Bold
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    // Italic
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    // Bullet points (- or *)
+    .replace(/^[-*] (.+)$/gm, '&bull; $1')
+    // Numbered lists
+    .replace(/^\d+\.\s(.+)$/gm, (_, content) => `&bull; ${content}`)
+    // Headers (### or ##)
+    .replace(/^###\s(.+)$/gm, '<strong>$1</strong>')
+    .replace(/^##\s(.+)$/gm, '<strong>$1</strong>')
+    // Line breaks
+    .replace(/\n/g, '<br />');
+}
+
 export default function AIAssistantAdmin() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -55,6 +72,19 @@ export default function AIAssistantAdmin() {
       setActiveConvId(id);
       setShowSidebar(false);
     } catch { toast.error('Failed to load conversation'); }
+  }
+
+  async function deleteConversation(id: number, e: React.MouseEvent) {
+    e.stopPropagation();
+    try {
+      await api.delete(`/ai-assistant/admin/conversations/${id}`);
+      setConversations(prev => prev.filter(c => c.id !== id));
+      if (activeConvId === id) {
+        setMessages([]);
+        setActiveConvId(null);
+      }
+      toast.success('Conversation deleted');
+    } catch { toast.error('Failed to delete conversation'); }
   }
 
   async function sendMessage(text?: string) {
@@ -113,9 +143,15 @@ export default function AIAssistantAdmin() {
           <div className="flex-1 overflow-y-auto">
             {conversations.map(conv => (
               <button key={conv.id} onClick={() => loadConversation(conv.id)}
-                className={`w-full text-left px-4 py-3 text-sm border-b border-gray-50 hover:bg-gray-50 ${activeConvId === conv.id ? 'bg-blue-50' : ''}`}>
-                <p className="font-medium text-gray-900 truncate">{conv.title}</p>
-                <p className="text-xs text-gray-400 mt-0.5">{new Date(conv.updated_at).toLocaleDateString()}</p>
+                className={`w-full text-left px-4 py-3 text-sm border-b border-gray-50 hover:bg-gray-50 group flex items-center justify-between ${activeConvId === conv.id ? 'bg-blue-50' : ''}`}>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-gray-900 truncate">{conv.title}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{new Date(conv.updated_at).toLocaleDateString()}</p>
+                </div>
+                <button onClick={(e) => deleteConversation(conv.id, e)}
+                  className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-opacity ml-2 flex-shrink-0">
+                  <HiTrash className="w-4 h-4" />
+                </button>
               </button>
             ))}
             {conversations.length === 0 && (
@@ -139,7 +175,7 @@ export default function AIAssistantAdmin() {
             </div>
             <div>
               <h2 className="font-semibold text-gray-900">AI Assistant</h2>
-              <p className="text-xs text-gray-400">Ask me about donations, expenses, volunteers, and more</p>
+              <p className="text-xs text-gray-400">Powered by Gemini — Ask me about donations, expenses, volunteers, and more</p>
             </div>
           </div>
         </div>
@@ -168,9 +204,7 @@ export default function AIAssistantAdmin() {
             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div className={`max-w-[80%] ${msg.role === 'user' ? 'bg-slate-900 text-white' : 'bg-gray-100 text-gray-900'} rounded-2xl px-4 py-3`}>
                 <div className="text-sm whitespace-pre-wrap" dangerouslySetInnerHTML={{
-                  __html: msg.content
-                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                    .replace(/\n/g, '<br />')
+                  __html: formatMarkdown(msg.content)
                 }} />
                 <p className={`text-[10px] mt-2 ${msg.role === 'user' ? 'text-slate-400' : 'text-gray-400'}`}>
                   {new Date(msg.timestamp).toLocaleTimeString()}
