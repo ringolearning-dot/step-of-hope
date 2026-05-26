@@ -151,6 +151,11 @@ const whatWeDo = [
     desc: 'Every child deserves a birthday to remember. We plan celebrations filled with joy, cake, and love — no matter the circumstances.',
   },
   {
+    icon: HiGift,
+    title: 'Hope Packages',
+    desc: 'We prepare thoughtful care packages filled with comfort items, toys, essentials, and encouragement for children and families in need.',
+  },
+  {
     icon: HiUsers,
     title: 'Family Support',
     desc: 'We walk alongside entire families — parents, siblings, and caregivers — offering resources, connections, and a compassionate community.',
