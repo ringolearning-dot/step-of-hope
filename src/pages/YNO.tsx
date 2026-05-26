@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useInView } from 'react-intersection-observer'
+import ynoSplash from '../assets/images/yno-splash.jpg'
 import {
   HiCpuChip,
   HiMagnifyingGlass,
@@ -139,14 +140,12 @@ export default function YNO() {
                 {/* Notch */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-7 bg-navy rounded-b-2xl z-10" />
                 {/* Screen */}
-                <div className="bg-gradient-to-br from-hope/20 via-bg-warm to-hope-light/20 rounded-[2.4rem] aspect-[9/19] flex items-center justify-center overflow-hidden">
-                  <div className="text-center px-6">
-                    <div className="w-16 h-16 bg-hope/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                      <span className="font-display text-hope text-2xl font-bold">Y</span>
-                    </div>
-                    <p className="font-display text-navy font-semibold text-lg mb-1">YNO</p>
-                    <p className="font-body text-navy-soft/60 text-xs">App Preview</p>
-                  </div>
+                <div className="rounded-[2.4rem] aspect-[9/19] overflow-hidden">
+                  <img
+                    src={ynoSplash}
+                    alt="YNO App"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
               </div>
               {/* Glow */}
