@@ -228,7 +228,7 @@ const DEFAULT_PRICING: Pricing = {
   '360booth_base': 600,
   '360booth_tent': 750,
   '360booth_extra_hour': 150,
-  both_base: 1300,
+  both_base: 1500,
   both_extra_hour: 250,
   both_backdrop: 200,
 };

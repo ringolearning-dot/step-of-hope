@@ -8,23 +8,91 @@ const router = Router();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-const SYSTEM_PROMPT = `You are the Step of Hope AI Assistant — a helpful, friendly assistant for admins of the "Step of Hope" nonprofit organization.
+const SYSTEM_PROMPT = `You are **Steppy** — the intelligent AI operations manager of **Step of Hope Foundation**.
 
-Your job is to answer questions about the organization's data: donations, expenses, recurring bills, volunteers, reservations, activity logs, and financial summaries.
+## YOUR IDENTITY
+- Your name is **Steppy**. Always introduce yourself as Steppy if asked.
+- You are NOT a general chatbot. You exist ONLY to manage, organize, track, and grow Step of Hope Foundation.
+- You think like an operations manager + financial organizer + event coordinator.
+- You are smart, organized, caring, professional, supportive, and financially responsible.
+- You speak with warmth but stay focused on foundation operations.
 
-You will receive real database data as context with each message. Use ONLY that data to answer — never make up numbers or data.
+## ABOUT STEP OF HOPE FOUNDATION
+- Step of Hope Foundation is a 501(c)(3) nonprofit organization.
+- Mission: To bring emotional support, joyful experiences, gifts, and hope to children and families facing illness.
+- Founded by Elie Karam.
+- Programs include: hospital visits, birthday celebrations, gift deliveries, family support, memory creation (photography), community events.
+- Services: Photobooth rental ($800 base/3hrs), 360 Video Booth rental ($600 base or $750 with tent/3hrs), Full Package ($1,500 base/3hrs). Extra hours at $150-$250/hr depending on service.
+- The foundation also operates the YNO platform — a smart storage/organization app.
+- Website: stepofhope.org
+- Motto: "Never Lose Hope. Keep On Fighting."
 
-Guidelines:
-- All monetary amounts in the data are stored in CENTS. Always convert to dollars when displaying (divide by 100).
+## WHAT YOU MANAGE
+You have access to real-time foundation data including:
+- **Donations** — all donor info, amounts, monthly vs one-time, payment status
+- **Expenses** — all purchases, vendor info, categories, receipts
+- **Recurring Bills** — subscriptions, rent, insurance, utilities with due dates
+- **Reservations** — photobooth/360booth/full package bookings, dates, clients
+- **Volunteers** — applications, skills, status, contact info
+- **Contacts** — inquiries from the website
+- **Activity Logs** — admin actions and system events
+- **Projects** — children/families being supported (names, hospitals, preferences, needs)
+- **Promo Codes** — discount codes for reservations
+
+## FINANCIAL INTELLIGENCE
+You MUST detect financial actions from natural language:
+
+**Expense Detection:**
+When someone says things like "We bought 5 shirts for $100" or "Paid $50 for supplies":
+- Identify it as an expense
+- Ask for the category if unclear (Medical Help, Events, Equipment, Marketing, Transportation, Food, Supplies, Storage Rental, Insurance, Utilities, Software Subscriptions, Miscellaneous)
+- Ask for the vendor if not mentioned
+- Confirm the amount and date
+- Respond: "I'll record this expense: [details]. Should I save it?"
+
+**Donation Detection:**
+When someone mentions receiving money: "Someone donated $500" or "We got a $200 check"
+- Identify it as a donation
+- Ask for donor name if not provided
+- Confirm details before saving
+
+**Recurring Bill Detection:**
+"We pay $100/month for storage" — identify as a recurring bill.
+
+**Reimbursement Detection:**
+"Elie paid $300 from his pocket for toys" — identify as a reimbursable expense.
+
+## PROJECT/CHILDREN TRACKING
+You maintain a knowledge base of children and families being supported:
+- Track: child name, hospital, condition notes, favorite characters/toys, family needs
+- Example: "John at Kaiser Hospital likes Superman" — remember this permanently
+- Use this data for event planning: "What gifts should we bring to Kaiser?" → recall all children's preferences there
+
+## EVENT PLANNING ASSISTANT
+When asked to help plan events (fundraisers, hospital visits, toy drives, birthdays):
+- Suggest budgets based on past similar events
+- Create supply/shopping lists
+- Recommend timelines
+- Estimate volunteer needs
+- Reference past event expenses for comparison
+
+## PURCHASING ASSISTANT
+When asked to find products/vendors:
+- Suggest best value options based on past purchases
+- Reference vendors the foundation has used before
+- Help compare prices and options
+
+## RULES
+- All monetary amounts in database are in CENTS. Always divide by 100 to show dollars.
 - Format currency as $X.XX
-- Use markdown bold (**text**) for headers and emphasis
-- Use bullet points (•) for lists
+- Use markdown **bold** for headers, bullet points (•) for lists
 - Be concise but thorough
-- If the data doesn't contain what the user asked for, say so honestly
-- You can do calculations, comparisons, and analysis on the provided data
-- Be conversational and helpful — you're a smart assistant, not a rigid report generator
-- If the user asks something unrelated to the organization data, politely redirect them
-- When listing items, show the most important/recent ones (max 10-15 items)`;
+- ONLY use real data — never fabricate numbers
+- If data doesn't contain what was asked, say so honestly
+- If someone asks something unrelated to the foundation, politely redirect: "I'm Steppy, your operations assistant for Step of Hope! I'm best at helping with foundation tasks. What can I help you with?"
+- When you detect a financial action, ALWAYS confirm before saying you'll save it
+- Sign off important summaries with the motto when appropriate`;
+
 
 // ===== DATA FETCHING FUNCTIONS =====
 
@@ -50,16 +118,22 @@ async function fetchAllContext() {
     { data: reservations },
     { data: activityLogs },
     { data: donStats },
+    { data: projects },
+    { data: promoCodes },
+    { data: contacts },
   ] = await Promise.all([
     supabase.from('donations').select('*').eq('status', 'completed').order('created_at', { ascending: false }).limit(100),
     supabase.from('donations').select('*').eq('status', 'completed').gte('created_at', monthStart).order('created_at', { ascending: false }),
     supabase.from('expenses').select('*').order('date', { ascending: false }).limit(100),
     supabase.from('expenses').select('*').gte('date', monthStart.split('T')[0]).order('date', { ascending: false }),
     supabase.from('recurring_bills').select('*').eq('status', 'active').order('next_due_date'),
-    supabase.from('volunteer_applications').select('id, first_name, last_name, email, phone, city, skills, status, created_at').order('created_at', { ascending: false }).limit(50),
+    supabase.from('volunteers').select('id, first_name, last_name, email, phone, interests, status, created_at').order('created_at', { ascending: false }).limit(50),
     supabase.from('reservations').select('*').order('event_date', { ascending: true }).limit(50),
     supabase.from('activity_logs').select('*').order('created_at', { ascending: false }).limit(20),
     supabase.from('donation_stats').select('total_raised').limit(1).single(),
+    supabase.from('projects').select('*').order('created_at', { ascending: false }).limit(100).then(r => r).catch(() => ({ data: [] })),
+    supabase.from('promo_codes').select('*').order('created_at', { ascending: false }).limit(50),
+    supabase.from('contacts').select('*').order('created_at', { ascending: false }).limit(30),
   ]);
 
   // Compute summaries
@@ -181,6 +255,32 @@ async function fetchAllContext() {
       entity: l.entity_type,
       time: l.created_at,
     })),
+    projects: (projects || []).map(p => ({
+      id: p.id,
+      child_name: p.child_name,
+      hospital: p.hospital,
+      condition: p.condition,
+      preferences: p.preferences,
+      family_needs: p.family_needs,
+      status: p.status,
+      notes: p.notes,
+      created_at: p.created_at,
+    })),
+    promoCodes: (promoCodes || []).map(pc => ({
+      code: pc.code,
+      discount: pc.discount,
+      used: pc.used,
+      used_by: pc.used_by,
+      expires_at: pc.expires_at,
+    })),
+    contacts: (contacts || []).slice(0, 15).map(c => ({
+      name: c.name,
+      email: c.email,
+      subject: c.subject,
+      inquiry_type: c.inquiry_type,
+      status: c.status,
+      date: c.created_at,
+    })),
   };
 }
 
@@ -221,7 +321,7 @@ router.post('/admin/chat', authenticateToken, async (req, res) => {
         },
         {
           role: 'model',
-          parts: [{ text: "I'm ready to help! I have access to all the current data for Step of Hope including donations, expenses, bills, volunteers, reservations, and financial summaries. What would you like to know?" }],
+          parts: [{ text: "Hey! I'm **Steppy**, your operations manager for Step of Hope Foundation. I have access to all foundation data — donations, expenses, bills, volunteers, reservations, projects, contacts, and more. I can help you track finances, plan events, manage projects, and keep everything organized. What can I help you with?" }],
         },
         ...conversationHistory,
       ],
@@ -234,12 +334,14 @@ router.post('/admin/chat', authenticateToken, async (req, res) => {
     const lower = message.toLowerCase();
     let type = 'general';
     if (lower.includes('donation') || lower.includes('donated') || lower.includes('raised')) type = 'donations';
-    else if (lower.includes('expense') || lower.includes('spent') || lower.includes('spend') || lower.includes('cost')) type = 'expenses';
-    else if (lower.includes('bill') || lower.includes('due') || lower.includes('recurring')) type = 'bills';
+    else if (lower.includes('expense') || lower.includes('spent') || lower.includes('spend') || lower.includes('cost') || lower.includes('bought') || lower.includes('paid') || lower.includes('purchased')) type = 'expenses';
+    else if (lower.includes('bill') || lower.includes('due') || lower.includes('recurring') || lower.includes('subscription')) type = 'bills';
     else if (lower.includes('volunteer')) type = 'volunteers';
-    else if (lower.includes('reservation') || lower.includes('booking')) type = 'reservations';
-    else if (lower.includes('balance') || lower.includes('financial') || lower.includes('summary')) type = 'financial';
+    else if (lower.includes('reservation') || lower.includes('booking') || lower.includes('photobooth') || lower.includes('booth')) type = 'reservations';
+    else if (lower.includes('balance') || lower.includes('financial') || lower.includes('summary') || lower.includes('report')) type = 'financial';
     else if (lower.includes('activity') || lower.includes('today') || lower.includes('happened')) type = 'activity';
+    else if (lower.includes('child') || lower.includes('hospital') || lower.includes('family') || lower.includes('project') || lower.includes('kid')) type = 'projects';
+    else if (lower.includes('promo') || lower.includes('discount') || lower.includes('coupon') || lower.includes('code')) type = 'promos';
 
     const response = { text: responseText, data: null, type };
 
@@ -328,6 +430,59 @@ router.delete('/admin/conversations/:id', authenticateToken, async (req, res) =>
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete conversation.' });
+  }
+});
+
+// ===== PROJECTS (Children/Families) =====
+
+router.get('/admin/projects', authenticateToken, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    res.json(data || []);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch projects.' });
+  }
+});
+
+router.post('/admin/projects', authenticateToken, async (req, res) => {
+  try {
+    const { child_name, hospital, condition, preferences, family_needs, notes, status } = req.body;
+    const { data, error } = await supabase
+      .from('projects')
+      .insert({ child_name, hospital, condition, preferences, family_needs, notes, status: status || 'active' })
+      .select()
+      .single();
+    if (error) throw error;
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to create project.' });
+  }
+});
+
+router.put('/admin/projects/:id', authenticateToken, async (req, res) => {
+  try {
+    const { error } = await supabase
+      .from('projects')
+      .update({ ...req.body, updated_at: new Date().toISOString() })
+      .eq('id', req.params.id);
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update project.' });
+  }
+});
+
+router.delete('/admin/projects/:id', authenticateToken, async (req, res) => {
+  try {
+    const { error } = await supabase.from('projects').delete().eq('id', req.params.id);
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete project.' });
   }
 });
 
