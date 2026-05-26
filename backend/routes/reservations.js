@@ -20,43 +20,101 @@ function getTransporter() {
   });
 }
 
+// Default pricing (used as fallback)
+const DEFAULT_PRICING = {
+  photobooth_base: 800,
+  photobooth_extra_hour: 150,
+  photobooth_backdrop: 200,
+  '360booth_base': 600,
+  '360booth_tent': 750,
+  '360booth_extra_hour': 150,
+  both_base: 1300,
+  both_extra_hour: 250,
+  both_backdrop: 200,
+};
+
+// Fetch pricing from database
+async function getPricing() {
+  try {
+    const { data } = await supabase
+      .from('site_content')
+      .select('field_key, field_value')
+      .eq('page', 'pricing');
+
+    if (data && data.length > 0) {
+      const pricing = { ...DEFAULT_PRICING };
+      data.forEach((row) => {
+        if (row.field_value) pricing[row.field_key] = parseInt(row.field_value);
+      });
+      return pricing;
+    }
+  } catch (err) {
+    console.error('Failed to fetch pricing:', err.message);
+  }
+  return DEFAULT_PRICING;
+}
+
+// Get pricing (public endpoint)
+router.get('/pricing', async (req, res) => {
+  const pricing = await getPricing();
+  res.json(pricing);
+});
+
+// Update pricing (admin only)
+router.put('/admin/pricing', authenticateToken, async (req, res) => {
+  try {
+    const prices = req.body;
+    for (const [key, value] of Object.entries(prices)) {
+      await supabase
+        .from('site_content')
+        .upsert({ page: 'pricing', field_key: key, field_value: String(value), updated_at: new Date().toISOString() }, { onConflict: 'page,field_key' });
+    }
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Update pricing error:', err.message);
+    res.status(500).json({ error: 'Failed to update pricing.' });
+  }
+});
+
 // Calculate total price
-function calculateTotal(serviceType, options) {
+async function calculateTotalAsync(serviceType, options) {
+  const p = await getPricing();
+  return calculateTotalWithPricing(serviceType, options, p);
+}
+
+function calculateTotalWithPricing(serviceType, options, p) {
   let base = 0;
   let extras = 0;
 
   if (serviceType === 'photobooth') {
-    base = 800; // 3 hours included
+    base = p.photobooth_base;
     const extraHours = Math.max(0, (options.numHours || 3) - 3);
-    extras += extraHours * 150;
-    if (options.customBackdrop) extras += 200;
+    extras += extraHours * p.photobooth_extra_hour;
+    if (options.customBackdrop) extras += p.photobooth_backdrop;
   } else if (serviceType === 'both') {
-    base = 1300; // Photo Booth + 360 Booth
+    base = p.both_base;
     const extraHours = Math.max(0, (options.numHours || 3) - 3);
-    extras += extraHours * 250;
-    if (options.customBackdrop) extras += 200;
+    extras += extraHours * p.both_extra_hour;
+    if (options.customBackdrop) extras += p.both_backdrop;
   } else if (serviceType === '360booth') {
-    base = options.withTent ? 750 : 600;
+    base = options.withTent ? p['360booth_tent'] : p['360booth_base'];
     const extraHours = Math.max(0, (options.numHours || 3) - 3);
-    extras += extraHours * 150;
+    extras += extraHours * p['360booth_extra_hour'];
   }
 
   return base + extras;
 }
 
 // Build line items for Stripe
-function buildLineItems(serviceType, options) {
+function buildLineItems(serviceType, options, p) {
   const items = [];
 
   if (serviceType === 'photobooth') {
     items.push({
       price_data: {
         currency: 'usd',
-        product_data: {
-          name: 'Photobooth - 3 Hours',
-          description: 'Step of Hope Photobooth experience (3 hours included)',
-        },
-        unit_amount: 80000,
+        product_data: { name: 'Photobooth - 3 Hours', description: 'Step of Hope Photobooth experience (3 hours included)' },
+        unit_amount: p.photobooth_base * 100,
       },
       quantity: 1,
     });
@@ -65,11 +123,8 @@ function buildLineItems(serviceType, options) {
       items.push({
         price_data: {
           currency: 'usd',
-          product_data: {
-            name: 'Extra Hours',
-            description: `${extraHours} additional hour(s) at $150/hr`,
-          },
-          unit_amount: 15000,
+          product_data: { name: 'Extra Hours', description: `${extraHours} additional hour(s) at $${p.photobooth_extra_hour}/hr` },
+          unit_amount: p.photobooth_extra_hour * 100,
         },
         quantity: extraHours,
       });
@@ -78,11 +133,8 @@ function buildLineItems(serviceType, options) {
       items.push({
         price_data: {
           currency: 'usd',
-          product_data: {
-            name: 'Custom Backdrop',
-            description: 'Custom backdrop design',
-          },
-          unit_amount: 20000,
+          product_data: { name: 'Custom Backdrop', description: 'Custom backdrop design' },
+          unit_amount: p.photobooth_backdrop * 100,
         },
         quantity: 1,
       });
@@ -91,11 +143,8 @@ function buildLineItems(serviceType, options) {
     items.push({
       price_data: {
         currency: 'usd',
-        product_data: {
-          name: 'Photo Booth + 360 Booth Bundle - 3 Hours',
-          description: 'Step of Hope combined booth experience (3 hours included)',
-        },
-        unit_amount: 130000,
+        product_data: { name: 'Photo Booth + 360 Booth Bundle - 3 Hours', description: 'Step of Hope combined booth experience (3 hours included)' },
+        unit_amount: p.both_base * 100,
       },
       quantity: 1,
     });
@@ -104,11 +153,8 @@ function buildLineItems(serviceType, options) {
       items.push({
         price_data: {
           currency: 'usd',
-          product_data: {
-            name: 'Extra Hours (Both Booths)',
-            description: `${extraHours} additional hour(s) at $250/hr`,
-          },
-          unit_amount: 25000,
+          product_data: { name: 'Extra Hours (Both Booths)', description: `${extraHours} additional hour(s) at $${p.both_extra_hour}/hr` },
+          unit_amount: p.both_extra_hour * 100,
         },
         quantity: extraHours,
       });
@@ -117,24 +163,19 @@ function buildLineItems(serviceType, options) {
       items.push({
         price_data: {
           currency: 'usd',
-          product_data: {
-            name: 'Custom Backdrop',
-            description: 'Custom backdrop design',
-          },
-          unit_amount: 20000,
+          product_data: { name: 'Custom Backdrop', description: 'Custom backdrop design' },
+          unit_amount: p.both_backdrop * 100,
         },
         quantity: 1,
       });
     }
   } else if (serviceType === '360booth') {
+    const base360 = options.withTent ? p['360booth_tent'] : p['360booth_base'];
     items.push({
       price_data: {
         currency: 'usd',
-        product_data: {
-          name: options.withTent ? '360 Video Booth - With White Tent' : '360 Video Booth - Without Tent',
-          description: 'Step of Hope 360 Video Booth experience (3 hours included)',
-        },
-        unit_amount: options.withTent ? 75000 : 60000,
+        product_data: { name: options.withTent ? '360 Video Booth - With White Tent' : '360 Video Booth - Without Tent', description: 'Step of Hope 360 Video Booth experience (3 hours included)' },
+        unit_amount: base360 * 100,
       },
       quantity: 1,
     });
@@ -143,11 +184,8 @@ function buildLineItems(serviceType, options) {
       items.push({
         price_data: {
           currency: 'usd',
-          product_data: {
-            name: 'Extra Hours',
-            description: `${extraHours} additional hour(s) at $150/hr`,
-          },
-          unit_amount: 15000,
+          product_data: { name: 'Extra Hours', description: `${extraHours} additional hour(s) at $${p['360booth_extra_hour']}/hr` },
+          unit_amount: p['360booth_extra_hour'] * 100,
         },
         quantity: extraHours,
       });
@@ -391,7 +429,8 @@ router.post('/create-session', async (req, res) => {
       return res.status(400).json({ error: 'Please fill in all required fields.' });
     }
 
-    let total = calculateTotal(serviceType, { numHours, withTent, customBackdrop });
+    const p = await getPricing();
+    let total = calculateTotalWithPricing(serviceType, { numHours, withTent, customBackdrop }, p);
     let discount = 0;
     let appliedPromo = null;
 
@@ -410,7 +449,7 @@ router.post('/create-session', async (req, res) => {
       }
     }
 
-    const lineItems = buildLineItems(serviceType, { numHours, withTent, customBackdrop });
+    const lineItems = buildLineItems(serviceType, { numHours, withTent, customBackdrop }, p);
 
     const stripe = getStripe();
 

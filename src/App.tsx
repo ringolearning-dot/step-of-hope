@@ -27,6 +27,7 @@ import SettingsAdmin from './pages/admin/SettingsAdmin';
 import ContentAdmin from './pages/admin/ContentAdmin';
 import ReservationsAdmin from './pages/admin/ReservationsAdmin';
 import PromoCodesAdmin from './pages/admin/PromoCodesAdmin';
+import PricingAdmin from './pages/admin/PricingAdmin';
 import ExpensesAdmin from './pages/admin/ExpensesAdmin';
 import RecurringBillsAdmin from './pages/admin/RecurringBillsAdmin';
 import CalendarAdmin from './pages/admin/CalendarAdmin';
@@ -78,6 +79,7 @@ export default function App() {
             <Route path="reports" element={<ReportsAdmin />} />
             <Route path="reservations" element={<ReservationsAdmin />} />
             <Route path="promo-codes" element={<PromoCodesAdmin />} />
+            <Route path="pricing" element={<PricingAdmin />} />
             <Route path="calendar" element={<CalendarAdmin />} />
             <Route path="volunteers" element={<VolunteersAdmin />} />
             <Route path="contacts" element={<ContactsAdmin />} />

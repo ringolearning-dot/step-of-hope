@@ -45,6 +45,7 @@ const navSections = [
     items: [
       { to: '/admin/reservations', label: 'Reservations', icon: HiCalendarDays },
       { to: '/admin/promo-codes', label: 'Promo Codes', icon: HiTicket },
+      { to: '/admin/pricing', label: 'Pricing', icon: HiCurrencyDollar },
       { to: '/admin/calendar', label: 'Calendar', icon: HiCalendarDays },
       { to: '/admin/volunteers', label: 'Volunteers', icon: HiUsers },
       { to: '/admin/contacts', label: 'Contacts', icon: HiEnvelope },

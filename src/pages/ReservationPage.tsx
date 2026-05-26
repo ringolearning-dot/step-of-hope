@@ -209,24 +209,48 @@ function Calendar({
   );
 }
 
-function calculateTotal(serviceType: ServiceType, form: FormData) {
+interface Pricing {
+  photobooth_base: number;
+  photobooth_extra_hour: number;
+  photobooth_backdrop: number;
+  '360booth_base': number;
+  '360booth_tent': number;
+  '360booth_extra_hour': number;
+  both_base: number;
+  both_extra_hour: number;
+  both_backdrop: number;
+}
+
+const DEFAULT_PRICING: Pricing = {
+  photobooth_base: 800,
+  photobooth_extra_hour: 150,
+  photobooth_backdrop: 200,
+  '360booth_base': 600,
+  '360booth_tent': 750,
+  '360booth_extra_hour': 150,
+  both_base: 1300,
+  both_extra_hour: 250,
+  both_backdrop: 200,
+};
+
+function calculateTotal(serviceType: ServiceType, form: FormData, p: Pricing) {
   let base = 0;
   let extras = 0;
 
   if (serviceType === 'photobooth') {
-    base = 800;
+    base = p.photobooth_base;
     const extraHours = Math.max(0, form.numHours - 3);
-    extras += extraHours * 150;
-    if (form.customBackdrop) extras += 200;
+    extras += extraHours * p.photobooth_extra_hour;
+    if (form.customBackdrop) extras += p.photobooth_backdrop;
   } else if (serviceType === 'both') {
-    base = 1300;
+    base = p.both_base;
     const extraHours = Math.max(0, form.numHours - 3);
-    extras += extraHours * 250;
-    if (form.customBackdrop) extras += 200;
+    extras += extraHours * p.both_extra_hour;
+    if (form.customBackdrop) extras += p.both_backdrop;
   } else {
-    base = form.withTent ? 750 : 600;
+    base = form.withTent ? p['360booth_tent'] : p['360booth_base'];
     const extraHours = Math.max(0, form.numHours - 3);
-    extras += extraHours * 150;
+    extras += extraHours * p['360booth_extra_hour'];
   }
 
   return { base, extras, total: base + extras };
@@ -244,6 +268,11 @@ export default function ReservationPage() {
   const [promoApplied, setPromoApplied] = useState<{ code: string; discount: number } | null>(null);
   const [promoError, setPromoError] = useState('');
   const [promoLoading, setPromoLoading] = useState(false);
+  const [prices, setPrices] = useState<Pricing>(DEFAULT_PRICING);
+
+  useEffect(() => {
+    api.get('/reservations/pricing').then((res) => setPrices(res.data)).catch(() => {});
+  }, []);
   const [form, setForm] = useState<FormData>({
     fullName: '',
     email: '',
@@ -286,7 +315,7 @@ export default function ReservationPage() {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const pricing = calculateTotal(serviceType, form);
+  const pricing = calculateTotal(serviceType, form, prices);
 
   const validateStep = (s: number): boolean => {
     switch (s) {
@@ -563,7 +592,7 @@ export default function ReservationPage() {
                       ))}
                     </div>
                     <p className="text-xs text-navy/40 mt-2 font-body">
-                      3 hours included. Extra hours at $150/hr.
+                      3 hours included. Extra hours at ${serviceType === 'both' ? prices.both_extra_hour : serviceType === 'photobooth' ? prices.photobooth_extra_hour : prices['360booth_extra_hour']}/hr.
                     </p>
                   </div>
 
@@ -736,15 +765,15 @@ export default function ReservationPage() {
                       <div className="space-y-3">
                         <div className="flex justify-between items-center py-2 border-b border-navy/5">
                           <span className="font-body text-navy/70">Photo Booth + 360 Booth (3hrs base)</span>
-                          <span className="font-display font-bold text-navy">$1,300</span>
+                          <span className="font-display font-bold text-navy">${prices.both_base.toLocaleString()}</span>
                         </div>
                         <div className="flex justify-between items-center py-2 border-b border-navy/5">
                           <span className="font-body text-navy/70">Extra Hour</span>
-                          <span className="font-display font-bold text-navy">$250/hr</span>
+                          <span className="font-display font-bold text-navy">${prices.both_extra_hour}/hr</span>
                         </div>
                         <div className="flex justify-between items-center py-2">
                           <span className="font-body text-navy/70">Custom Backdrop</span>
-                          <span className="font-display font-bold text-navy">+$200</span>
+                          <span className="font-display font-bold text-navy">+${prices.both_backdrop}</span>
                         </div>
                         <div className="pt-4 mt-4 border-t border-navy/10">
                           <label className="flex items-center gap-3 cursor-pointer">
@@ -755,7 +784,7 @@ export default function ReservationPage() {
                               className="w-5 h-5 rounded border-navy/20 text-navy focus:ring-hope accent-navy"
                             />
                             <span className="font-body text-navy font-medium">
-                              Add Custom Backdrop (+$200)
+                              Add Custom Backdrop (+${prices.both_backdrop})
                             </span>
                           </label>
                         </div>
@@ -764,15 +793,15 @@ export default function ReservationPage() {
                       <div className="space-y-3">
                         <div className="flex justify-between items-center py-2 border-b border-navy/5">
                           <span className="font-body text-navy/70">3 Hours (base)</span>
-                          <span className="font-display font-bold text-navy">$800</span>
+                          <span className="font-display font-bold text-navy">${prices.photobooth_base}</span>
                         </div>
                         <div className="flex justify-between items-center py-2 border-b border-navy/5">
                           <span className="font-body text-navy/70">Extra Hour</span>
-                          <span className="font-display font-bold text-navy">$150/hr</span>
+                          <span className="font-display font-bold text-navy">${prices.photobooth_extra_hour}/hr</span>
                         </div>
                         <div className="flex justify-between items-center py-2">
                           <span className="font-body text-navy/70">Custom Backdrop</span>
-                          <span className="font-display font-bold text-navy">+$200</span>
+                          <span className="font-display font-bold text-navy">+${prices.photobooth_backdrop}</span>
                         </div>
 
                         <div className="pt-4 mt-4 border-t border-navy/10">
@@ -784,7 +813,7 @@ export default function ReservationPage() {
                               className="w-5 h-5 rounded border-navy/20 text-navy focus:ring-hope accent-navy"
                             />
                             <span className="font-body text-navy font-medium">
-                              Add Custom Backdrop (+$200)
+                              Add Custom Backdrop (+${prices.photobooth_backdrop})
                             </span>
                           </label>
                         </div>
@@ -806,7 +835,7 @@ export default function ReservationPage() {
                             />
                             <span className="font-body text-navy font-medium">Without Tent</span>
                           </div>
-                          <span className="font-display font-bold text-navy">$600</span>
+                          <span className="font-display font-bold text-navy">${prices['360booth_base']}</span>
                         </label>
                         <label
                           className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all ${
@@ -823,11 +852,11 @@ export default function ReservationPage() {
                             />
                             <span className="font-body text-navy font-medium">With White Tent</span>
                           </div>
-                          <span className="font-display font-bold text-navy">$750</span>
+                          <span className="font-display font-bold text-navy">${prices['360booth_tent']}</span>
                         </label>
                         <div className="flex justify-between items-center py-2 border-t border-navy/5 mt-2">
                           <span className="font-body text-navy/70">Extra Hour</span>
-                          <span className="font-display font-bold text-navy">$150/hr</span>
+                          <span className="font-display font-bold text-navy">${prices['360booth_extra_hour']}/hr</span>
                         </div>
                       </div>
                     )}
