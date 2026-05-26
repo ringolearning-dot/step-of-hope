@@ -856,7 +856,8 @@ export default function ReservationPage() {
                   </div>
                 </div>
 
-                {/* Backdrop & Design */}
+                {/* Backdrop & Design — not for 360 booth */}
+                {serviceType !== '360booth' && (
                 <div>
                   <h2 className="font-display text-2xl font-bold text-navy mb-6">Backdrop & Design</h2>
                   <div className="space-y-4">
@@ -885,7 +886,10 @@ export default function ReservationPage() {
                       />
                     </div>
                   </div>
+                </div>
+                )}
 
+                <div>
                   <h2 className="font-display text-2xl font-bold text-navy mt-8 mb-6">Special Notes</h2>
                   <div className="space-y-4">
                     <div>
