@@ -7,7 +7,6 @@ import {
   HiSparkles,
   HiUserGroup,
   HiGift,
-  HiCamera,
   HiCake,
   HiStar,
   HiUsers,
@@ -150,11 +149,6 @@ const whatWeDo = [
     icon: HiCake,
     title: 'Birthday Celebrations',
     desc: 'Every child deserves a birthday to remember. We plan celebrations filled with joy, cake, and love — no matter the circumstances.',
-  },
-  {
-    icon: HiCamera,
-    title: 'Memory Creation',
-    desc: 'Professional photography and video sessions capture precious family moments that become treasured keepsakes for years to come.',
   },
   {
     icon: HiUsers,
