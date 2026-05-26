@@ -269,13 +269,13 @@ export default function ExpensesAdmin() {
                 <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} className="w-full border rounded-lg px-3 py-2 text-sm" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Receipt</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Document</label>
                 <label className="flex items-center justify-center gap-2 w-full border-2 border-dashed border-gray-300 rounded-lg px-3 py-4 text-sm cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition">
-                  <input type="file" className="hidden" accept="image/*,.pdf" onChange={e => setReceiptFile(e.target.files?.[0] || null)} />
+                  <input type="file" className="hidden" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt" onChange={e => setReceiptFile(e.target.files?.[0] || null)} />
                   {receiptFile ? (
                     <span className="text-gray-700 truncate">{receiptFile.name}</span>
                   ) : (
-                    <span className="text-gray-400">Click to upload receipt (image or PDF)</span>
+                    <span className="text-gray-400">Click to upload document</span>
                   )}
                 </label>
                 {receiptFile && (
