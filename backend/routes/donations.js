@@ -153,6 +153,60 @@ router.get('/verify/:sessionId', async (req, res) => {
   }
 });
 
+// Sync pending donations with Stripe (check actual payment status + fees)
+router.post('/admin/sync', authenticateToken, async (req, res) => {
+  try {
+    const stripe = getStripe();
+    const { data: pendingDonations } = await supabase
+      .from('donations')
+      .select('*')
+      .eq('status', 'pending');
+
+    let synced = 0;
+    for (const donation of (pendingDonations || [])) {
+      if (!donation.stripe_session_id) continue;
+      try {
+        const session = await stripe.checkout.sessions.retrieve(donation.stripe_session_id, {
+          expand: ['payment_intent.latest_charge.balance_transaction'],
+        });
+
+        const updates = {};
+
+        if (session.payment_status === 'paid') {
+          updates.status = 'completed';
+          updates.stripe_payment_intent = session.payment_intent?.id || session.subscription;
+
+          // Get fee and net from balance transaction
+          const charge = session.payment_intent?.latest_charge;
+          const balanceTx = charge?.balance_transaction;
+          if (balanceTx) {
+            updates.stripe_fee = balanceTx.fee; // in cents
+            updates.net_amount = balanceTx.net; // in cents
+          }
+          synced++;
+        } else if (session.status === 'expired') {
+          updates.status = 'expired';
+          synced++;
+        }
+
+        if (Object.keys(updates).length > 0) {
+          await supabase
+            .from('donations')
+            .update(updates)
+            .eq('id', donation.id);
+        }
+      } catch (stripeErr) {
+        console.error(`Sync error for donation ${donation.id}:`, stripeErr.message);
+      }
+    }
+
+    res.json({ synced, total: (pendingDonations || []).length });
+  } catch (err) {
+    console.error('Sync error:', err.message);
+    res.status(500).json({ error: 'Failed to sync with Stripe.' });
+  }
+});
+
 // ===== ADMIN ROUTES =====
 
 // Get all donations

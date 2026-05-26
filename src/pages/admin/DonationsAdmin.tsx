@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../../lib/api';
-import { HiCurrencyDollar, HiCheckCircle, HiClock, HiArrowDownTray } from 'react-icons/hi2';
+import { HiCurrencyDollar, HiCheckCircle, HiClock, HiArrowDownTray, HiArrowPath } from 'react-icons/hi2';
 
 interface Donation {
   id: number;
@@ -38,7 +38,8 @@ export default function DonationsAdmin() {
   const [error, setError] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [page, setPage] = useState(1);
-  const [summary, setSummary] = useState({ total: 0, completed: 0, pending: 0 });
+  const [summary, setSummary] = useState({ total: 0, completed: 0, pending: 0, totalNet: 0, totalFees: 0 });
+  const [syncing, setSyncing] = useState(false);
 
   useEffect(() => {
     const fetchDonations = async () => {
@@ -56,11 +57,15 @@ export default function DonationsAdmin() {
         const pendingAmount = data
           .filter((d) => d.status === 'pending')
           .reduce((sum, d) => sum + d.amount, 0);
+        const totalNet = data.reduce((sum, d) => sum + (d.net_amount || 0), 0);
+        const totalFees = data.reduce((sum, d) => sum + (d.stripe_fee || 0), 0);
 
         setSummary({
           total: totalAmount,
           completed: completedAmount,
           pending: pendingAmount,
+          totalNet,
+          totalFees,
         });
       } catch (err: any) {
         setError('Failed to load donations.');
@@ -78,6 +83,19 @@ export default function DonationsAdmin() {
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const handleSync = async () => {
+    setSyncing(true);
+    try {
+      const res = await api.post('/donations/admin/sync');
+      alert(`Synced ${res.data.synced} of ${res.data.total} pending donations with Stripe.`);
+      window.location.reload();
+    } catch {
+      alert('Failed to sync with Stripe.');
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const handleExport = async () => {
     try {
@@ -128,16 +146,22 @@ export default function DonationsAdmin() {
 
   const summaryCards = [
     {
-      label: 'Total',
+      label: 'Gross Total',
       value: formatCents(summary.total),
       icon: HiCurrencyDollar,
       color: 'bg-slate-50 text-slate-600',
     },
     {
-      label: 'Completed',
-      value: formatCents(summary.completed),
+      label: 'Net (After Fees)',
+      value: formatCents(summary.totalNet || summary.completed),
       icon: HiCheckCircle,
       color: 'bg-emerald-50 text-emerald-600',
+    },
+    {
+      label: 'Stripe Fees',
+      value: formatCents(summary.totalFees),
+      icon: HiCurrencyDollar,
+      color: 'bg-red-50 text-red-600',
     },
     {
       label: 'Pending',
@@ -156,18 +180,29 @@ export default function DonationsAdmin() {
             {donations.length} total donation{donations.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <button
-          onClick={handleExport}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200
-                     rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
-        >
-          <HiArrowDownTray className="w-4 h-4" />
-          Export CSV
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleSync}
+            disabled={syncing}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 text-white
+                       rounded-lg text-sm font-medium hover:bg-slate-700 disabled:opacity-50 transition"
+          >
+            <HiArrowPath className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
+            {syncing ? 'Syncing...' : 'Sync Stripe'}
+          </button>
+          <button
+            onClick={handleExport}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200
+                       rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+          >
+            <HiArrowDownTray className="w-4 h-4" />
+            Export CSV
+          </button>
+        </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {summaryCards.map((card) => (
           <div key={card.label} className="bg-white rounded-xl border border-gray-200 p-5">
             <div className="flex items-center justify-between mb-2">
@@ -213,6 +248,7 @@ export default function DonationsAdmin() {
                 <th className="px-5 py-3 font-medium">Donor Name</th>
                 <th className="px-5 py-3 font-medium">Email</th>
                 <th className="px-5 py-3 font-medium">Amount</th>
+                <th className="px-5 py-3 font-medium">Net</th>
                 <th className="px-5 py-3 font-medium">Status</th>
                 <th className="px-5 py-3 font-medium">Monthly</th>
               </tr>
@@ -230,6 +266,9 @@ export default function DonationsAdmin() {
                   <td className="px-5 py-3 text-gray-900 font-medium whitespace-nowrap">
                     {formatCents(d.amount)}
                   </td>
+                  <td className="px-5 py-3 text-emerald-700 font-medium whitespace-nowrap">
+                    {d.net_amount ? formatCents(d.net_amount) : '-'}
+                  </td>
                   <td className="px-5 py-3 whitespace-nowrap">{statusBadge(d.status)}</td>
                   <td className="px-5 py-3 whitespace-nowrap">
                     <span
@@ -244,7 +283,7 @@ export default function DonationsAdmin() {
               ))}
               {paginated.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-5 py-8 text-center text-gray-400">
+                  <td colSpan={7} className="px-5 py-8 text-center text-gray-400">
                     No donations found.
                   </td>
                 </tr>

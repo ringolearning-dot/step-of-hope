@@ -32,6 +32,8 @@ CREATE TABLE IF NOT EXISTS donations (
   status TEXT DEFAULT 'pending',
   is_monthly BOOLEAN DEFAULT FALSE,
   metadata TEXT,
+  stripe_fee INTEGER DEFAULT 0,
+  net_amount INTEGER DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
