@@ -30,6 +30,11 @@ function calculateTotal(serviceType, options) {
     const extraHours = Math.max(0, (options.numHours || 3) - 3);
     extras += extraHours * 150;
     if (options.customBackdrop) extras += 200;
+  } else if (serviceType === 'both') {
+    base = 1300; // Photo Booth + 360 Booth
+    const extraHours = Math.max(0, (options.numHours || 3) - 3);
+    extras += extraHours * 250;
+    if (options.customBackdrop) extras += 200;
   } else if (serviceType === '360booth') {
     base = options.withTent ? 750 : 600;
     const extraHours = Math.max(0, (options.numHours || 3) - 3);
@@ -65,6 +70,45 @@ function buildLineItems(serviceType, options) {
             description: `${extraHours} additional hour(s) at $150/hr`,
           },
           unit_amount: 15000,
+        },
+        quantity: extraHours,
+      });
+    }
+    if (options.customBackdrop) {
+      items.push({
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: 'Custom Backdrop',
+            description: 'Custom backdrop design',
+          },
+          unit_amount: 20000,
+        },
+        quantity: 1,
+      });
+    }
+  } else if (serviceType === 'both') {
+    items.push({
+      price_data: {
+        currency: 'usd',
+        product_data: {
+          name: 'Photo Booth + 360 Booth Bundle - 3 Hours',
+          description: 'Step of Hope combined booth experience (3 hours included)',
+        },
+        unit_amount: 130000,
+      },
+      quantity: 1,
+    });
+    const extraHours = Math.max(0, (options.numHours || 3) - 3);
+    if (extraHours > 0) {
+      items.push({
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: 'Extra Hours (Both Booths)',
+            description: `${extraHours} additional hour(s) at $250/hr`,
+          },
+          unit_amount: 25000,
         },
         quantity: extraHours,
       });
@@ -252,6 +296,9 @@ router.get('/check-availability/:date', async (req, res) => {
 });
 
 // Get booked dates for calendar display
+// If booking photobooth: block dates with photobooth or "both" reservations
+// If booking 360booth: block dates with 360booth or "both" reservations
+// If booking both: block dates with any reservation (photobooth, 360booth, or both)
 router.get('/booked-dates', async (req, res) => {
   try {
     const { serviceType, month, year } = req.query;
@@ -261,9 +308,12 @@ router.get('/booked-dates', async (req, res) => {
       .select('event_date, service_type')
       .in('status', ['paid', 'confirmed']);
 
-    if (serviceType) {
-      query = query.eq('service_type', serviceType);
+    if (serviceType === 'photobooth') {
+      query = query.in('service_type', ['photobooth', 'both']);
+    } else if (serviceType === '360booth') {
+      query = query.in('service_type', ['360booth', 'both']);
     }
+    // For "both" or no filter, get all service types (no filter needed)
 
     if (month && year) {
       const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
@@ -280,6 +330,31 @@ router.get('/booked-dates', async (req, res) => {
     res.json({ bookedDates: (data || []).map((d) => d.event_date) });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch booked dates.' });
+  }
+});
+
+// Validate promo code
+router.post('/validate-promo', async (req, res) => {
+  try {
+    const { code } = req.body;
+    if (!code) return res.status(400).json({ error: 'No promo code provided.' });
+
+    const { data: promo, error } = await supabase
+      .from('promo_codes')
+      .select('*')
+      .eq('code', code.toUpperCase().trim())
+      .single();
+
+    if (error || !promo) return res.status(404).json({ error: 'Invalid promo code.' });
+    if (promo.used) return res.status(400).json({ error: 'This promo code has already been used.' });
+    if (promo.expires_at && new Date(promo.expires_at) < new Date()) {
+      return res.status(400).json({ error: 'This promo code has expired.' });
+    }
+
+    res.json({ valid: true, discount: promo.discount, code: promo.code });
+  } catch (err) {
+    console.error('Promo validation error:', err.message);
+    res.status(500).json({ error: 'Failed to validate promo code.' });
   }
 });
 
@@ -308,6 +383,7 @@ router.post('/create-session', async (req, res) => {
       setupAccessTime,
       powerAvailability,
       specialRequests,
+      promoCode,
     } = req.body;
 
     // Validate required fields
@@ -315,12 +391,40 @@ router.post('/create-session', async (req, res) => {
       return res.status(400).json({ error: 'Please fill in all required fields.' });
     }
 
-    const total = calculateTotal(serviceType, { numHours, withTent, customBackdrop });
+    let total = calculateTotal(serviceType, { numHours, withTent, customBackdrop });
+    let discount = 0;
+    let appliedPromo = null;
+
+    // Validate and apply promo code
+    if (promoCode) {
+      const { data: promo } = await supabase
+        .from('promo_codes')
+        .select('*')
+        .eq('code', promoCode.toUpperCase().trim())
+        .single();
+
+      if (promo && !promo.used && (!promo.expires_at || new Date(promo.expires_at) >= new Date())) {
+        discount = Math.round(total * (promo.discount / 100));
+        total = total - discount;
+        appliedPromo = promo;
+      }
+    }
+
     const lineItems = buildLineItems(serviceType, { numHours, withTent, customBackdrop });
 
     const stripe = getStripe();
 
-    const session = await stripe.checkout.sessions.create({
+    // Create a Stripe coupon if promo code is applied
+    let stripeCoupon = null;
+    if (appliedPromo) {
+      stripeCoupon = await stripe.coupons.create({
+        percent_off: appliedPromo.discount,
+        duration: 'once',
+        name: `Promo ${appliedPromo.code} (${appliedPromo.discount}% off)`,
+      });
+    }
+
+    const sessionParams = {
       payment_method_types: ['card'],
       customer_email: email,
       line_items: lineItems,
@@ -332,8 +436,23 @@ router.post('/create-session', async (req, res) => {
         service_type: serviceType,
         full_name: fullName,
         event_date: eventDate,
+        promo_code: appliedPromo?.code || '',
       },
-    });
+    };
+
+    if (stripeCoupon) {
+      sessionParams.discounts = [{ coupon: stripeCoupon.id }];
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
+
+    // Mark promo code as used
+    if (appliedPromo) {
+      await supabase
+        .from('promo_codes')
+        .update({ used: true, used_at: new Date().toISOString(), used_by: email })
+        .eq('id', appliedPromo.id);
+    }
 
     // Record pending reservation
     await supabase.from('reservations').insert({
@@ -351,7 +470,7 @@ router.post('/create-session', async (req, res) => {
       indoor_outdoor: indoorOutdoor,
       estimated_guests: estimatedGuests,
       with_tent: serviceType === '360booth' ? !!withTent : null,
-      custom_backdrop: serviceType === 'photobooth' ? !!customBackdrop : null,
+      custom_backdrop: (serviceType === 'photobooth' || serviceType === 'both') ? !!customBackdrop : null,
       backdrop_choice: backdropChoice || null,
       custom_design_url: customDesignUrl || null,
       design_notes: designNotes || null,
@@ -360,6 +479,8 @@ router.post('/create-session', async (req, res) => {
       power_availability: powerAvailability || null,
       special_requests: specialRequests || null,
       total_amount: total * 100,
+      promo_code: appliedPromo?.code || null,
+      discount_amount: discount ? discount * 100 : 0,
       status: 'pending',
     });
 
@@ -561,6 +682,68 @@ router.get('/admin/export', authenticateToken, async (req, res) => {
     res.send(csv);
   } catch (err) {
     res.status(500).json({ error: 'Failed to export reservations.' });
+  }
+});
+
+// ===== PROMO CODE ADMIN ROUTES =====
+
+// Get all promo codes
+router.get('/admin/promo-codes', authenticateToken, async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('promo_codes')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) return res.status(500).json({ error: 'Failed to fetch promo codes.' });
+    res.json({ promoCodes: data || [] });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch promo codes.' });
+  }
+});
+
+// Create promo code
+router.post('/admin/promo-codes', authenticateToken, async (req, res) => {
+  try {
+    const { code, discount, expiresAt } = req.body;
+    if (!code || !discount) {
+      return res.status(400).json({ error: 'Code and discount are required.' });
+    }
+
+    const { data, error } = await supabase
+      .from('promo_codes')
+      .insert({
+        code: code.toUpperCase().trim(),
+        discount: parseFloat(discount),
+        expires_at: expiresAt || null,
+        used: false,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      if (error.code === '23505') return res.status(400).json({ error: 'This code already exists.' });
+      return res.status(500).json({ error: 'Failed to create promo code.' });
+    }
+
+    res.json({ promoCode: data });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to create promo code.' });
+  }
+});
+
+// Delete promo code
+router.delete('/admin/promo-codes/:id', authenticateToken, async (req, res) => {
+  try {
+    const { error } = await supabase
+      .from('promo_codes')
+      .delete()
+      .eq('id', req.params.id);
+
+    if (error) return res.status(500).json({ error: 'Failed to delete promo code.' });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete promo code.' });
   }
 });
 

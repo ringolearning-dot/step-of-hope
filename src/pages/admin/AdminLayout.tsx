@@ -19,6 +19,7 @@ import {
   HiShieldCheck,
   HiClock,
   HiUserGroup,
+  HiTicket,
 } from 'react-icons/hi2';
 import { HiBars3, HiXMark, HiArrowRightOnRectangle } from 'react-icons/hi2';
 
@@ -43,6 +44,7 @@ const navSections = [
     title: 'Operations',
     items: [
       { to: '/admin/reservations', label: 'Reservations', icon: HiCalendarDays },
+      { to: '/admin/promo-codes', label: 'Promo Codes', icon: HiTicket },
       { to: '/admin/calendar', label: 'Calendar', icon: HiCalendarDays },
       { to: '/admin/volunteers', label: 'Volunteers', icon: HiUsers },
       { to: '/admin/contacts', label: 'Contacts', icon: HiEnvelope },

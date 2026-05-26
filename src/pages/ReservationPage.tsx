@@ -240,6 +240,10 @@ export default function ReservationPage() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [bookedDates, setBookedDates] = useState<string[]>([]);
+  const [promoCode, setPromoCode] = useState('');
+  const [promoApplied, setPromoApplied] = useState<{ code: string; discount: number } | null>(null);
+  const [promoError, setPromoError] = useState('');
+  const [promoLoading, setPromoLoading] = useState(false);
   const [form, setForm] = useState<FormData>({
     fullName: '',
     email: '',
@@ -337,6 +341,7 @@ export default function ReservationPage() {
         setupAccessTime: form.setupAccessTime.trim(),
         powerAvailability: form.powerAvailability.trim(),
         specialRequests: form.specialRequests.trim(),
+        promoCode: promoApplied?.code || null,
       });
 
       if (res.data?.url) {
@@ -1027,12 +1032,66 @@ export default function ReservationPage() {
                           <span>$200</span>
                         </div>
                       )}
+                      {promoApplied && (
+                        <div className="flex justify-between text-emerald-600 mb-1">
+                          <span>Promo ({promoApplied.code}) -{promoApplied.discount}%</span>
+                          <span>-${Math.round(pricing.total * (promoApplied.discount / 100))}</span>
+                        </div>
+                      )}
                       <div className="flex justify-between font-display font-bold text-navy text-xl pt-2 border-t border-navy/10">
                         <span>Total</span>
-                        <span>${pricing.total}</span>
+                        <span>${promoApplied ? pricing.total - Math.round(pricing.total * (promoApplied.discount / 100)) : pricing.total}</span>
                       </div>
                     </div>
                   </div>
+                </div>
+
+                {/* Promo Code */}
+                <div className="bg-white rounded-2xl shadow-sm border border-navy/10 p-6 mb-6">
+                  <h3 className="font-display font-bold text-navy mb-3">Promo Code</h3>
+                  {promoApplied ? (
+                    <div className="flex items-center justify-between bg-emerald-50 border border-emerald-200 rounded-xl p-3">
+                      <span className="font-body text-sm text-emerald-700 font-medium">
+                        {promoApplied.code} — {promoApplied.discount}% discount applied
+                      </span>
+                      <button
+                        onClick={() => { setPromoApplied(null); setPromoCode(''); }}
+                        className="text-xs text-red-600 hover:underline font-medium"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={promoCode}
+                        onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoError(''); }}
+                        placeholder="Enter promo code"
+                        className="flex-1 px-4 py-3 rounded-xl border-2 border-navy/10 focus:border-hope focus:ring-2 focus:ring-hope/20 outline-none font-body text-navy text-sm"
+                      />
+                      <button
+                        onClick={async () => {
+                          if (!promoCode.trim()) return;
+                          setPromoLoading(true);
+                          setPromoError('');
+                          try {
+                            const res = await api.post('/reservations/validate-promo', { code: promoCode.trim() });
+                            setPromoApplied({ code: res.data.code, discount: res.data.discount });
+                          } catch (err: any) {
+                            setPromoError(err.response?.data?.error || 'Invalid promo code.');
+                          } finally {
+                            setPromoLoading(false);
+                          }
+                        }}
+                        disabled={promoLoading || !promoCode.trim()}
+                        className="px-5 py-3 bg-navy text-white font-display font-semibold text-sm rounded-xl hover:bg-navy-soft disabled:opacity-50 transition"
+                      >
+                        {promoLoading ? '...' : 'Apply'}
+                      </button>
+                    </div>
+                  )}
+                  {promoError && <p className="text-red-600 text-xs mt-2 font-body">{promoError}</p>}
                 </div>
 
                 {/* Important Note */}
@@ -1051,7 +1110,7 @@ export default function ReservationPage() {
                   className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-gold to-gold-light hover:from-gold-light hover:to-gold text-white font-display font-bold text-lg py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <FaCreditCard className="w-5 h-5" />
-                  {loading ? 'Processing...' : `Pay $${pricing.total} & Reserve`}
+                  {loading ? 'Processing...' : `Pay $${promoApplied ? pricing.total - Math.round(pricing.total * (promoApplied.discount / 100)) : pricing.total} & Reserve`}
                 </button>
 
                 <p className="font-body text-navy/40 text-xs text-center mt-4">

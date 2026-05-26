@@ -26,6 +26,7 @@ import ContactsAdmin from './pages/admin/ContactsAdmin';
 import SettingsAdmin from './pages/admin/SettingsAdmin';
 import ContentAdmin from './pages/admin/ContentAdmin';
 import ReservationsAdmin from './pages/admin/ReservationsAdmin';
+import PromoCodesAdmin from './pages/admin/PromoCodesAdmin';
 import ExpensesAdmin from './pages/admin/ExpensesAdmin';
 import RecurringBillsAdmin from './pages/admin/RecurringBillsAdmin';
 import CalendarAdmin from './pages/admin/CalendarAdmin';
@@ -76,6 +77,7 @@ export default function App() {
             <Route path="recurring-bills" element={<RecurringBillsAdmin />} />
             <Route path="reports" element={<ReportsAdmin />} />
             <Route path="reservations" element={<ReservationsAdmin />} />
+            <Route path="promo-codes" element={<PromoCodesAdmin />} />
             <Route path="calendar" element={<CalendarAdmin />} />
             <Route path="volunteers" element={<VolunteersAdmin />} />
             <Route path="contacts" element={<ContactsAdmin />} />
