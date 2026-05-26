@@ -61,6 +61,7 @@ export default function ExpensesAdmin() {
   const [form, setForm] = useState({
     title: '', description: '', amount: '', category_id: '', category_name: '', vendor: '', date: new Date().toISOString().split('T')[0], notes: '',
   });
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
 
   useEffect(() => { fetchAll(); }, [page, filterCategory, search]);
 
@@ -87,12 +88,19 @@ export default function ExpensesAdmin() {
     e.preventDefault();
     try {
       const payload = { ...form, amount: parseFloat(form.amount), category_id: form.category_id ? Number(form.category_id) : null };
+      let expenseId = editId;
       if (editId) {
         await api.put(`/expenses/admin/${editId}`, payload);
         toast.success('Expense updated');
       } else {
-        await api.post('/expenses/admin', payload);
+        const res = await api.post('/expenses/admin', payload);
+        expenseId = res.data.id;
         toast.success('Expense added');
+      }
+      if (receiptFile && expenseId) {
+        const fd = new FormData();
+        fd.append('receipt', receiptFile);
+        await api.post(`/expenses/admin/${expenseId}/receipt`, fd);
       }
       resetForm();
       fetchAll();
@@ -129,7 +137,7 @@ export default function ExpensesAdmin() {
   }
 
   function resetForm() {
-    setShowForm(false); setEditId(null);
+    setShowForm(false); setEditId(null); setReceiptFile(null);
     setForm({ title: '', description: '', amount: '', category_id: '', category_name: '', vendor: '', date: new Date().toISOString().split('T')[0], notes: '' });
   }
 
@@ -259,6 +267,20 @@ export default function ExpensesAdmin() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
                 <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={2} className="w-full border rounded-lg px-3 py-2 text-sm" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Receipt</label>
+                <label className="flex items-center justify-center gap-2 w-full border-2 border-dashed border-gray-300 rounded-lg px-3 py-4 text-sm cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition">
+                  <input type="file" className="hidden" accept="image/*,.pdf" onChange={e => setReceiptFile(e.target.files?.[0] || null)} />
+                  {receiptFile ? (
+                    <span className="text-gray-700 truncate">{receiptFile.name}</span>
+                  ) : (
+                    <span className="text-gray-400">Click to upload receipt (image or PDF)</span>
+                  )}
+                </label>
+                {receiptFile && (
+                  <button type="button" onClick={() => setReceiptFile(null)} className="text-xs text-red-500 hover:underline mt-1">Remove</button>
+                )}
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <button type="button" onClick={resetForm} className="px-4 py-2 text-sm border rounded-lg hover:bg-gray-50">Cancel</button>
