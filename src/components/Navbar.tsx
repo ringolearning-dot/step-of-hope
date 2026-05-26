@@ -9,7 +9,7 @@ const navLinks = [
   { name: 'Mission', path: '/mission' },
   { name: 'Impact', path: '/impact' },
   { name: 'YNO', path: '/yno' },
-  { name: 'Events & Services', path: '/events' },
+  { name: 'Services', path: '/events' },
   { name: 'Donate', path: '/donate' },
   { name: 'Volunteer', path: '/volunteer' },
   { name: 'Contact', path: '/contact' },

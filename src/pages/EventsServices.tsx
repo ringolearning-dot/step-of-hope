@@ -31,13 +31,6 @@ const services = [
   },
 ];
 
-const galleryItems = [
-  { slot: 'gallery1', label: 'Weddings' },
-  { slot: 'gallery2', label: 'Birthdays' },
-  { slot: 'gallery3', label: 'School Events' },
-  { slot: 'gallery4', label: 'Corporate Events' },
-  { slot: 'gallery5', label: "Children's Parties" },
-];
 
 export default function EventsServices() {
   const c = useContent('events');
@@ -134,57 +127,6 @@ export default function EventsServices() {
         </div>
       </section>
 
-      {/* Gallery */}
-      <section className="bg-white py-20 md:py-28">
-        <div className="max-w-7xl mx-auto px-6">
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-50px' }}
-            className="text-center mb-16"
-          >
-            <motion.h2
-              variants={fadeUp}
-              custom={0}
-              className="font-display text-3xl md:text-5xl font-bold text-navy"
-            >
-              Event Gallery
-            </motion.h2>
-            <motion.p
-              variants={fadeUp}
-              custom={1}
-              className="font-body text-navy/60 mt-4 max-w-2xl mx-auto text-lg"
-            >
-              A glimpse into the celebrations we have been a part of.
-            </motion.p>
-          </motion.div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {galleryItems.map((item, i) => (
-              <motion.div
-                key={item.slot}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, margin: '-20px' }}
-                variants={fadeUp}
-                custom={i}
-                className="relative group rounded-xl overflow-hidden aspect-[4/5]"
-              >
-                <SectionImage
-                  section="events"
-                  slot={item.slot}
-                  fallback={item.label}
-                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-navy/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-4">
-                  <span className="font-display text-white text-sm font-semibold">{item.label}</span>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Booking CTA */}
       <section className="py-20 md:py-28">
         <div className="max-w-4xl mx-auto px-6">
@@ -199,7 +141,7 @@ export default function EventsServices() {
               custom={0}
               className="font-display text-3xl md:text-5xl font-bold text-white"
             >
-              Book Your Event
+              Book Your Service
             </motion.h2>
             <motion.p
               variants={fadeUp}
