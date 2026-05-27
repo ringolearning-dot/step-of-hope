@@ -20,6 +20,7 @@ import {
   HiClock,
   HiUserGroup,
   HiTicket,
+  HiFolderOpen,
 } from 'react-icons/hi2';
 import { HiBars3, HiXMark, HiArrowRightOnRectangle } from 'react-icons/hi2';
 
@@ -56,6 +57,7 @@ const navSections = [
     items: [
       { to: '/admin/content', label: 'Page Content', icon: HiDocumentText },
       { to: '/admin/images', label: 'Images', icon: HiPhoto },
+      { to: '/admin/documents', label: 'Documents', icon: HiFolderOpen },
     ],
   },
   {

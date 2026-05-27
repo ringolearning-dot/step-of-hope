@@ -36,6 +36,7 @@ import ReportsAdmin from './pages/admin/ReportsAdmin';
 import ActivityLogsAdmin from './pages/admin/ActivityLogsAdmin';
 import NotificationsAdmin from './pages/admin/NotificationsAdmin';
 import AdminUsersAdmin from './pages/admin/AdminUsersAdmin';
+import DocumentsAdmin from './pages/admin/DocumentsAdmin';
 
 export default function App() {
   return (
@@ -85,6 +86,7 @@ export default function App() {
             <Route path="contacts" element={<ContactsAdmin />} />
             <Route path="content" element={<ContentAdmin />} />
             <Route path="images" element={<ImagesAdmin />} />
+            <Route path="documents" element={<DocumentsAdmin />} />
             <Route path="ai-assistant" element={<AIAssistantAdmin />} />
             <Route path="users" element={<AdminUsersAdmin />} />
             <Route path="activity-logs" element={<ActivityLogsAdmin />} />

@@ -20,6 +20,7 @@ import aiAssistantRoutes from './routes/ai-assistant.js';
 import reportRoutes from './routes/reports.js';
 import dailyEmailRoutes from './routes/daily-emails.js';
 import adminUserRoutes from './routes/admin-users.js';
+import documentRoutes from './routes/documents.js';
 import { runDailyReport } from './routes/daily-emails.js';
 
 const app = express();
@@ -57,6 +58,7 @@ app.use('/api/ai-assistant', aiAssistantRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/daily-emails', dailyEmailRoutes);
 app.use('/api/admin-users', adminUserRoutes);
+app.use('/api/documents', documentRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
