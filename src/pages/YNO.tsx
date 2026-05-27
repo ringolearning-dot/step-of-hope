@@ -166,14 +166,15 @@ export default function YNO() {
             <div className="w-16 h-0.5 bg-hope" />
             <p className="font-body text-navy-soft leading-relaxed text-[15px] md:text-base">
               YNO is an intelligent organization platform designed to help individuals and families
-              manage their daily lives with ease. Powered by cutting-edge AI, YNO learns your
-              preferences, anticipates your needs, and keeps everything — from grocery lists to
-              family schedules — beautifully organized in one place.
+              simplify and manage their daily lives with ease. Powered by advanced AI technology,
+              YNO learns your preferences, understands your home organization habits, and keeps
+              everything — from household items and storage spaces to receipts, warranties, shopping
+              lists, and important belongings — beautifully organized in one place.
             </p>
             <p className="font-body text-navy-soft/70 leading-relaxed text-[15px]">
-              Built with the belief that technology should serve a greater purpose, YNO channels a
-              portion of every subscription to directly fund Step of Hope Foundation programs,
-              turning everyday convenience into lasting impact.
+              Built on the belief that technology should create meaningful impact, YNO dedicates a
+              portion of every subscription to supporting Step of Hope Foundation programs,
+              transforming everyday organization into hope and support for children and families in need.
             </p>
             <div className="flex flex-wrap gap-4 pt-2">
               <a
