@@ -195,8 +195,16 @@ export default function OurStory() {
     <main className="overflow-hidden">
       {/* ── HERO ──────────────────────────────────────────────── */}
       <section className="relative bg-[#1B2A4A] py-32 md:py-44 flex items-center justify-center text-center px-6">
-        {/* subtle radial glow */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(201,144,26,0.12)_0%,_transparent_70%)] pointer-events-none" />
+        {/* Hero background image */}
+        <div className="absolute inset-0 z-0">
+          <SectionImage
+            section="home"
+            slot="hero"
+            fallback="Hero Background"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-navy/80 via-navy/50 to-navy/70" />
+        </div>
 
         <motion.div
           initial={{ opacity: 0, y: 30 }}
