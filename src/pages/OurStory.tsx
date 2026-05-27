@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
 import api, { getImageUrl } from '../lib/api';
 import useContent from '../lib/useContent';
+import heroShared from '../assets/images/hero-shared.jpg';
 
 /* ------------------------------------------------------------------ */
 /*  SectionImage – loads a CMS-managed image or shows a placeholder   */
@@ -197,12 +198,7 @@ export default function OurStory() {
       <section className="relative bg-[#1B2A4A] py-32 md:py-44 flex items-center justify-center text-center px-6">
         {/* Hero background image */}
         <div className="absolute inset-0 z-0">
-          <SectionImage
-            section="home"
-            slot="hero"
-            fallback="Hero Background"
-            className="w-full h-full object-cover"
-          />
+          <img src={heroShared} alt="Hero Background" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-b from-navy/80 via-navy/50 to-navy/70" />
         </div>
 

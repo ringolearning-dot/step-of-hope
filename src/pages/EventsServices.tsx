@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import api, { getImageUrl } from '../lib/api';
 import useContent from '../lib/useContent';
+import heroShared from '../assets/images/hero-shared.jpg';
 
 function SectionImage({ section, slot, fallback, className }: { section: string; slot: string; fallback: string; className?: string }) {
   const [src, setSrc] = useState<string | null>(null);
@@ -52,12 +53,7 @@ export default function EventsServices() {
       {/* Hero */}
       <section className="relative overflow-hidden py-28 md:py-40">
         <div className="absolute inset-0 z-0">
-          <SectionImage
-            section="home"
-            slot="hero"
-            fallback="Hero Background"
-            className="w-full h-full object-cover"
-          />
+          <img src={heroShared} alt="Hero Background" className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-b from-navy/80 via-navy/50 to-navy/70" />
         </div>
         <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
