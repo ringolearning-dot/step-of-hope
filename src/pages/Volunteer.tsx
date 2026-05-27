@@ -1,8 +1,14 @@
-import { useState, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import api from '../lib/api';
-import heroShared from '../assets/images/hero-shared.jpg';
+import api, { getImageUrl } from '../lib/api';
+
+function SectionImage({ section, slot, fallback, className }: { section: string; slot: string; fallback: string; className?: string }) {
+  const [src, setSrc] = useState<string | null>(null);
+  useEffect(() => { api.get(`/images/${section}/${slot}`).then(res => setSrc(res.data.public_url || getImageUrl(res.data.filename))).catch(() => {}); }, [section, slot]);
+  if (src) return <img src={src} alt={fallback} className={className} />;
+  return <div className={`bg-gradient-to-br from-navy/10 to-hope/10 flex items-center justify-center text-navy/30 text-sm ${className}`}>{fallback}</div>;
+}
 import {
   FaTent, FaHouseMedical, FaCamera, FaGift, FaHandHoldingDollar,
   FaHandshake, FaEarthAmericas, FaTruck, FaLaptop, FaInstagram,
@@ -173,7 +179,12 @@ export default function Volunteer() {
       <div className="bg-bg-warm min-h-screen">
         <section className="relative overflow-hidden py-28 md:py-40">
           <div className="absolute inset-0 z-0">
-            <img src={heroShared} alt="Hero Background" className="w-full h-full object-cover" />
+            <SectionImage
+              section="home"
+              slot="hero"
+              fallback="Hero Background"
+              className="w-full h-full object-cover"
+            />
             <div className="absolute inset-0 bg-gradient-to-b from-navy/80 via-navy/50 to-navy/70" />
           </div>
           <div className="relative z-10 max-w-3xl mx-auto px-6 text-center">
@@ -224,7 +235,12 @@ export default function Volunteer() {
       {/* Hero */}
       <section className="relative overflow-hidden py-28 md:py-40">
         <div className="absolute inset-0 z-0">
-          <img src={heroShared} alt="Hero Background" className="w-full h-full object-cover" />
+          <SectionImage
+            section="home"
+            slot="hero"
+            fallback="Hero Background"
+            className="w-full h-full object-cover"
+          />
           <div className="absolute inset-0 bg-gradient-to-b from-navy/80 via-navy/50 to-navy/70" />
         </div>
         <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">

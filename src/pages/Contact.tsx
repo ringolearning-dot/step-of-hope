@@ -3,7 +3,6 @@ import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import api, { getImageUrl } from '../lib/api';
-import heroShared from '../assets/images/hero-shared.jpg';
 import { FaInstagram, FaFacebookF, FaTiktok } from 'react-icons/fa';
 import { FaCircleQuestion, FaHeart, FaPeopleGroup, FaCalendarDays, FaCamera, FaCirclePlay } from 'react-icons/fa6';
 
@@ -148,7 +147,12 @@ export default function Contact() {
       {/* Hero */}
       <section className="relative overflow-hidden py-28 md:py-40">
         <div className="absolute inset-0 z-0">
-          <img src={heroShared} alt="Hero Background" className="w-full h-full object-cover" />
+          <SectionImage
+            section="home"
+            slot="hero"
+            fallback="Hero Background"
+            className="w-full h-full object-cover"
+          />
           <div className="absolute inset-0 bg-gradient-to-b from-navy/80 via-navy/50 to-navy/70" />
         </div>
         <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
