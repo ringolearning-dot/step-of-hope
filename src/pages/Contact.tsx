@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import api, { getImageUrl } from '../lib/api';
 import { FaInstagram, FaFacebookF, FaTiktok } from 'react-icons/fa';
 import { FaCircleQuestion, FaHeart, FaPeopleGroup, FaCalendarDays, FaCamera, FaCirclePlay } from 'react-icons/fa6';
+import heroShared from '../assets/images/hero-shared.png';
 
 function SectionImage({ section, slot, fallback, className }: { section: string; slot: string; fallback: string; className?: string }) {
   const [src, setSrc] = useState<string | null>(null);
@@ -146,11 +147,11 @@ export default function Contact() {
     <div className="bg-bg-warm min-h-screen">
       {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-to-br from-navy via-navy-soft to-navy py-28 md:py-40">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-1/4 left-1/2 w-96 h-96 rounded-full bg-hope blur-[120px]" />
-          <div className="absolute bottom-1/3 left-1/4 w-72 h-72 rounded-full bg-hope-light blur-[100px]" />
+        <div className="absolute inset-0 z-0">
+          <img src={heroShared} alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-b from-navy/80 via-navy/50 to-navy/70" />
         </div>
-        <div className="relative max-w-5xl mx-auto px-6 text-center">
+        <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
