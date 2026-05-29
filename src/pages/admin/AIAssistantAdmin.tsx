@@ -1,7 +1,17 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import api from '../../lib/api';
 import toast from 'react-hot-toast';
-import { HiPaperAirplane, HiSparkles, HiChatBubbleLeftRight, HiTrash } from 'react-icons/hi2';
+import {
+  HiPaperAirplane,
+  HiSparkles,
+  HiChatBubbleLeftRight,
+  HiTrash,
+  HiClipboardDocument,
+  HiHandThumbUp,
+  HiHandThumbDown,
+  HiArrowPath,
+  HiStopCircle,
+} from 'react-icons/hi2';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -53,7 +63,9 @@ export default function AIAssistantAdmin() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConvId, setActiveConvId] = useState<number | null>(null);
   const [showSidebar, setShowSidebar] = useState(false);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => { loadConversations(); }, []);
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
@@ -96,11 +108,14 @@ export default function AIAssistantAdmin() {
     setMessages(prev => [...prev, userMsg]);
     setSending(true);
 
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     try {
       const res = await api.post('/ai-assistant/admin/chat', {
         message: msg,
         conversation_id: activeConvId,
-      });
+      }, { signal: controller.signal });
       const assistantMsg: Message = {
         role: 'assistant',
         content: res.data.text,
@@ -110,10 +125,15 @@ export default function AIAssistantAdmin() {
       };
       setMessages(prev => [...prev, assistantMsg]);
       loadConversations();
-    } catch {
-      toast.error('Failed to get response');
-      setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.', timestamp: new Date().toISOString() }]);
+    } catch (err: any) {
+      if (err?.code === 'ERR_CANCELED' || controller.signal.aborted) {
+        setMessages(prev => [...prev, { role: 'assistant', content: 'Response stopped.', timestamp: new Date().toISOString() }]);
+      } else {
+        toast.error('Failed to get response');
+        setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.', timestamp: new Date().toISOString() }]);
+      }
     } finally {
+      abortControllerRef.current = null;
       setSending(false);
     }
   }
@@ -127,6 +147,31 @@ export default function AIAssistantAdmin() {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
+    }
+  }
+
+  function handleStop() {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+  }
+
+  function handleCopy(content: string, index: number) {
+    navigator.clipboard.writeText(content);
+    setCopiedIndex(index);
+    toast.success('Copied to clipboard');
+    setTimeout(() => setCopiedIndex(null), 2000);
+  }
+
+  function handleRegenerate(index: number) {
+    // Find the last user message before this assistant message
+    for (let i = index - 1; i >= 0; i--) {
+      if (messages[i].role === 'user') {
+        // Remove messages from index onward and resend
+        setMessages(prev => prev.slice(0, index));
+        sendMessage(messages[i].content);
+        break;
+      }
     }
   }
 
@@ -202,13 +247,46 @@ export default function AIAssistantAdmin() {
 
           {messages.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[80%] ${msg.role === 'user' ? 'bg-slate-900 text-white' : 'bg-gray-100 text-gray-900'} rounded-2xl px-4 py-3`}>
-                <div className="text-sm whitespace-pre-wrap" dangerouslySetInnerHTML={{
-                  __html: formatMarkdown(msg.content)
-                }} />
-                <p className={`text-[10px] mt-2 ${msg.role === 'user' ? 'text-slate-400' : 'text-gray-400'}`}>
-                  {new Date(msg.timestamp).toLocaleTimeString()}
-                </p>
+              <div className="max-w-[80%]">
+                <div className={`${msg.role === 'user' ? 'bg-slate-900 text-white' : 'bg-gray-100 text-gray-900'} rounded-2xl px-4 py-3`}>
+                  <div className="text-sm whitespace-pre-wrap" dangerouslySetInnerHTML={{
+                    __html: formatMarkdown(msg.content)
+                  }} />
+                  <p className={`text-[10px] mt-2 ${msg.role === 'user' ? 'text-slate-400' : 'text-gray-400'}`}>
+                    {new Date(msg.timestamp).toLocaleTimeString()}
+                  </p>
+                </div>
+                {msg.role === 'assistant' && (
+                  <div className="flex items-center gap-1 mt-1.5 ml-1">
+                    <button
+                      onClick={() => handleCopy(msg.content, i)}
+                      className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                      title="Copy"
+                    >
+                      <HiClipboardDocument className="w-4 h-4" />
+                    </button>
+                    <button
+                      className="p-1.5 rounded-lg text-gray-400 hover:text-green-600 hover:bg-green-50 transition-colors"
+                      title="Good response"
+                    >
+                      <HiHandThumbUp className="w-4 h-4" />
+                    </button>
+                    <button
+                      className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                      title="Bad response"
+                    >
+                      <HiHandThumbDown className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleRegenerate(i)}
+                      disabled={sending}
+                      className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors disabled:opacity-50"
+                      title="Regenerate"
+                    >
+                      <HiArrowPath className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           ))}
@@ -238,13 +316,23 @@ export default function AIAssistantAdmin() {
               rows={1}
               className="flex-1 border rounded-xl px-4 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <button
-              onClick={() => sendMessage()}
-              disabled={!input.trim() || sending}
-              className="px-4 py-2.5 bg-slate-900 text-white rounded-xl hover:bg-slate-800 disabled:opacity-50 transition"
-            >
-              <HiPaperAirplane className="w-5 h-5" />
-            </button>
+            {sending ? (
+              <button
+                onClick={handleStop}
+                className="px-4 py-2.5 bg-red-600 text-white rounded-xl hover:bg-red-700 transition"
+                title="Stop generating"
+              >
+                <HiStopCircle className="w-5 h-5" />
+              </button>
+            ) : (
+              <button
+                onClick={() => sendMessage()}
+                disabled={!input.trim()}
+                className="px-4 py-2.5 bg-slate-900 text-white rounded-xl hover:bg-slate-800 disabled:opacity-50 transition"
+              >
+                <HiPaperAirplane className="w-5 h-5" />
+              </button>
+            )}
           </div>
         </div>
       </div>
