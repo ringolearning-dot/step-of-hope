@@ -13,12 +13,16 @@ import {
   HiPencilSquare,
   HiCheck,
   HiFolderOpen,
+  HiCalendarDays,
+  HiExclamationTriangle,
+  HiShieldCheck,
 } from 'react-icons/hi2';
 
 const CATEGORIES = [
   { value: 'receipt', label: 'Receipts' },
   { value: 'invoice', label: 'Invoices' },
   { value: 'contract', label: 'Contracts' },
+  { value: 'warranty', label: 'Warranty' },
   { value: 'report', label: 'Reports' },
   { value: 'legal', label: 'Legal' },
   { value: 'general', label: 'General' },
@@ -34,6 +38,9 @@ interface Doc {
   file_size: number;
   public_url: string;
   storage_path: string;
+  expiry_date: string | null;
+  image_url: string | null;
+  image_storage_path: string | null;
   created_at: string;
 }
 
@@ -60,9 +67,13 @@ export default function DocumentsAdmin() {
   const [category, setCategory] = useState('general');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
+  const [expiryDate, setExpiryDate] = useState('');
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
+  const imageRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchDocs();
@@ -105,6 +116,8 @@ export default function DocumentsAdmin() {
       fd.append('file', selectedFile);
       fd.append('title', title.trim());
       fd.append('category', category);
+      if (expiryDate) fd.append('expiry_date', expiryDate);
+      if (selectedImage) fd.append('image', selectedImage);
 
       const res = await api.post('/documents', fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -129,8 +142,31 @@ export default function DocumentsAdmin() {
     setCategory('general');
     setSelectedFile(null);
     setPreview(null);
+    setExpiryDate('');
+    setSelectedImage(null);
+    setImagePreview(null);
     setUploadProgress(0);
     if (fileRef.current) fileRef.current.value = '';
+    if (imageRef.current) imageRef.current.value = '';
+  }
+
+  function handleImageSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSelectedImage(file);
+    const reader = new FileReader();
+    reader.onload = () => setImagePreview(reader.result as string);
+    reader.readAsDataURL(file);
+  }
+
+  function getExpiryStatus(date: string | null) {
+    if (!date) return null;
+    const now = new Date();
+    const expiry = new Date(date);
+    const diffDays = Math.ceil((expiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays < 0) return 'expired';
+    if (diffDays <= 30) return 'expiring-soon';
+    return 'valid';
   }
 
   async function handleDelete(doc: Doc) {
@@ -230,6 +266,59 @@ export default function DocumentsAdmin() {
               </div>
 
               <div>
+                <label className="block text-sm font-medium text-navy/70 mb-1">Expiry / Warranty Date (optional)</label>
+                <input
+                  type="date"
+                  value={expiryDate}
+                  onChange={(e) => setExpiryDate(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-navy/20 focus:border-hope focus:ring-1 focus:ring-hope outline-none text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-navy/70 mb-1">Picture (optional)</label>
+                <div
+                  onClick={() => imageRef.current?.click()}
+                  className="border-2 border-dashed border-navy/20 rounded-xl p-4 text-center cursor-pointer hover:border-hope/50 transition-colors"
+                >
+                  {selectedImage ? (
+                    <div className="flex items-center gap-3">
+                      {imagePreview && (
+                        <img src={imagePreview} alt="Preview" className="w-16 h-16 object-cover rounded-lg" />
+                      )}
+                      <div className="text-left">
+                        <p className="text-sm text-navy font-medium">{selectedImage.name}</p>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedImage(null);
+                            setImagePreview(null);
+                            if (imageRef.current) imageRef.current.value = '';
+                          }}
+                          className="text-xs text-red-500 hover:text-red-700 mt-1"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-1">
+                      <HiPhoto className="w-6 h-6 text-navy/30 mx-auto" />
+                      <p className="text-xs text-navy/50">Click to add an optional picture</p>
+                    </div>
+                  )}
+                </div>
+                <input
+                  ref={imageRef}
+                  type="file"
+                  onChange={handleImageSelect}
+                  accept="image/*"
+                  className="hidden"
+                />
+              </div>
+
+              <div>
                 <label className="block text-sm font-medium text-navy/70 mb-1">File *</label>
                 <div
                   onClick={() => fileRef.current?.click()}
@@ -313,7 +402,7 @@ export default function DocumentsAdmin() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
         <div className="bg-white rounded-xl border border-navy/10 p-4 text-center">
           <p className="text-2xl font-bold text-navy">{docs.length}</p>
           <p className="text-xs text-navy/50">Total Files</p>
@@ -332,9 +421,15 @@ export default function DocumentsAdmin() {
         </div>
         <div className="bg-white rounded-xl border border-navy/10 p-4 text-center">
           <p className="text-2xl font-bold text-navy">
-            {docs.filter((d) => isImage(d.mime_type)).length}
+            {docs.filter((d) => d.category === 'warranty').length}
           </p>
-          <p className="text-xs text-navy/50">Images</p>
+          <p className="text-xs text-navy/50">Warranties</p>
+        </div>
+        <div className="bg-white rounded-xl border border-navy/10 p-4 text-center">
+          <p className="text-2xl font-bold text-red-500">
+            {docs.filter((d) => d.expiry_date && getExpiryStatus(d.expiry_date) === 'expired').length}
+          </p>
+          <p className="text-xs text-navy/50">Expired</p>
         </div>
       </div>
 
@@ -361,7 +456,9 @@ export default function DocumentsAdmin() {
             >
               {/* Thumbnail / Icon */}
               <div className="w-14 h-14 rounded-lg bg-navy/5 flex-shrink-0 flex items-center justify-center overflow-hidden">
-                {isImage(doc.mime_type) && doc.public_url ? (
+                {doc.image_url ? (
+                  <img src={doc.image_url} alt={doc.title} className="w-full h-full object-cover rounded-lg" />
+                ) : isImage(doc.mime_type) && doc.public_url ? (
                   <img src={doc.public_url} alt={doc.title} className="w-full h-full object-cover rounded-lg" />
                 ) : doc.mime_type === 'application/pdf' ? (
                   <HiDocumentText className="w-7 h-7 text-red-400" />
@@ -392,7 +489,7 @@ export default function DocumentsAdmin() {
                 ) : (
                   <p className="font-medium text-navy truncate">{doc.title}</p>
                 )}
-                <div className="flex items-center gap-3 mt-1">
+                <div className="flex flex-wrap items-center gap-2 mt-1">
                   <span className="text-xs bg-navy/5 text-navy/60 px-2 py-0.5 rounded-full">
                     {catLabel(doc.category)}
                   </span>
@@ -400,6 +497,27 @@ export default function DocumentsAdmin() {
                   <span className="text-xs text-navy/40">
                     {new Date(doc.created_at).toLocaleDateString()}
                   </span>
+                  {doc.expiry_date && (() => {
+                    const status = getExpiryStatus(doc.expiry_date);
+                    return (
+                      <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${
+                        status === 'expired'
+                          ? 'bg-red-100 text-red-700'
+                          : status === 'expiring-soon'
+                          ? 'bg-amber-100 text-amber-700'
+                          : 'bg-green-100 text-green-700'
+                      }`}>
+                        {status === 'expired' ? (
+                          <HiExclamationTriangle className="w-3 h-3" />
+                        ) : status === 'expiring-soon' ? (
+                          <HiCalendarDays className="w-3 h-3" />
+                        ) : (
+                          <HiShieldCheck className="w-3 h-3" />
+                        )}
+                        {status === 'expired' ? 'Expired' : 'Expires'} {new Date(doc.expiry_date).toLocaleDateString()}
+                      </span>
+                    );
+                  })()}
                 </div>
               </div>
 

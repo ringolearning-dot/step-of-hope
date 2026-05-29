@@ -28,6 +28,11 @@ const upload = multer({
   }
 });
 
+const uploadFields = upload.fields([
+  { name: 'file', maxCount: 1 },
+  { name: 'image', maxCount: 1 },
+]);
+
 const router = Router();
 
 // List all documents (admin)
@@ -47,22 +52,25 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // Upload a new document (admin)
-router.post('/', authenticateToken, upload.single('file'), async (req, res) => {
+router.post('/', authenticateToken, uploadFields, async (req, res) => {
   try {
-    if (!req.file) return res.status(400).json({ error: 'No file uploaded.' });
+    const mainFile = req.files?.file?.[0];
+    const imageFile = req.files?.image?.[0];
 
-    const { title, category } = req.body;
+    if (!mainFile) return res.status(400).json({ error: 'No file uploaded.' });
+
+    const { title, category, expiry_date } = req.body;
     if (!title) return res.status(400).json({ error: 'Title is required.' });
 
-    const ext = extname(req.file.originalname);
+    const ext = extname(mainFile.originalname);
     const filename = `${uuidv4()}${ext}`;
     const storagePath = `documents/${category || 'general'}/${filename}`;
 
-    // Upload to Supabase Storage
+    // Upload main file to Supabase Storage
     const { error: uploadError } = await supabase.storage
       .from('site-images')
-      .upload(storagePath, req.file.buffer, {
-        contentType: req.file.mimetype,
+      .upload(storagePath, mainFile.buffer, {
+        contentType: mainFile.mimetype,
         upsert: true,
       });
 
@@ -71,20 +79,48 @@ router.post('/', authenticateToken, upload.single('file'), async (req, res) => {
       return res.status(500).json({ error: 'Failed to upload file to storage.' });
     }
 
-    // Get public URL
+    // Get public URL for main file
     const { data: urlData } = supabase.storage
       .from('site-images')
       .getPublicUrl(storagePath);
+
+    // Upload optional image
+    let imageUrl = null;
+    let imageStoragePath = null;
+    if (imageFile) {
+      const imgExt = extname(imageFile.originalname);
+      const imgFilename = `${uuidv4()}${imgExt}`;
+      imageStoragePath = `documents/${category || 'general'}/images/${imgFilename}`;
+
+      const { error: imgUploadError } = await supabase.storage
+        .from('site-images')
+        .upload(imageStoragePath, imageFile.buffer, {
+          contentType: imageFile.mimetype,
+          upsert: true,
+        });
+
+      if (imgUploadError) {
+        console.error('Image upload error:', imgUploadError.message);
+      } else {
+        const { data: imgUrlData } = supabase.storage
+          .from('site-images')
+          .getPublicUrl(imageStoragePath);
+        imageUrl = imgUrlData?.publicUrl || null;
+      }
+    }
 
     const record = {
       title,
       category: category || 'general',
       filename,
-      original_name: req.file.originalname,
-      mime_type: req.file.mimetype,
-      file_size: req.file.size,
+      original_name: mainFile.originalname,
+      mime_type: mainFile.mimetype,
+      file_size: mainFile.size,
       public_url: urlData?.publicUrl || null,
       storage_path: storagePath,
+      expiry_date: expiry_date || null,
+      image_url: imageUrl,
+      image_storage_path: imageStoragePath,
     };
 
     const { data, error } = await supabase
@@ -108,10 +144,11 @@ router.post('/', authenticateToken, upload.single('file'), async (req, res) => {
 // Update document title/category (admin)
 router.patch('/:id', authenticateToken, async (req, res) => {
   try {
-    const { title, category } = req.body;
+    const { title, category, expiry_date } = req.body;
     const updates = {};
     if (title !== undefined) updates.title = title;
     if (category !== undefined) updates.category = category;
+    if (expiry_date !== undefined) updates.expiry_date = expiry_date || null;
 
     const { data, error } = await supabase
       .from('documents')
@@ -140,8 +177,11 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     if (fetchError || !doc) return res.status(404).json({ error: 'Document not found.' });
 
     // Remove from storage
-    if (doc.storage_path) {
-      await supabase.storage.from('site-images').remove([doc.storage_path]);
+    const pathsToRemove = [];
+    if (doc.storage_path) pathsToRemove.push(doc.storage_path);
+    if (doc.image_storage_path) pathsToRemove.push(doc.image_storage_path);
+    if (pathsToRemove.length) {
+      await supabase.storage.from('site-images').remove(pathsToRemove);
     }
 
     // Delete from database

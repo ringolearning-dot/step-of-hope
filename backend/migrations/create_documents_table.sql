@@ -9,8 +9,16 @@ CREATE TABLE IF NOT EXISTS documents (
   file_size BIGINT,
   public_url TEXT,
   storage_path TEXT,
+  expiry_date DATE,
+  image_url TEXT,
+  image_storage_path TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Add expiry_date and image columns if table already exists
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS expiry_date DATE;
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS image_url TEXT;
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS image_storage_path TEXT;
 
 -- Index for faster category filtering
 CREATE INDEX IF NOT EXISTS idx_documents_category ON documents(category);
