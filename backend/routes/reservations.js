@@ -752,6 +752,25 @@ router.delete('/admin/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// Resend receipt email to customer
+router.post('/admin/:id/send-receipt', authenticateToken, async (req, res) => {
+  try {
+    const { data: reservation, error } = await supabase
+      .from('reservations')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
+
+    if (error || !reservation) return res.status(404).json({ error: 'Reservation not found.' });
+
+    await sendConfirmationEmail(reservation);
+    res.json({ message: 'Receipt email sent.' });
+  } catch (err) {
+    console.error('Resend receipt error:', err.message);
+    res.status(500).json({ error: 'Failed to send receipt email.' });
+  }
+});
+
 // Export reservations as CSV
 router.get('/admin/export', authenticateToken, async (req, res) => {
   try {

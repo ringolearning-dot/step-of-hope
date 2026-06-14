@@ -52,6 +52,19 @@ export default function ReservationsAdmin() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState({ status: '', serviceType: '' });
   const [selectedRes, setSelectedRes] = useState<Reservation | null>(null);
+  const [sendingReceipt, setSendingReceipt] = useState<string | null>(null);
+
+  const sendReceipt = async (id: string) => {
+    setSendingReceipt(id);
+    try {
+      await api.post(`/reservations/admin/${id}/send-receipt`);
+      alert('Receipt email sent!');
+    } catch {
+      alert('Failed to send receipt.');
+    } finally {
+      setSendingReceipt(null);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -224,12 +237,21 @@ export default function ReservationsAdmin() {
                     </span>
                   </td>
                   <td className="px-5 py-3 whitespace-nowrap">
-                    <button
-                      onClick={() => setSelectedRes(r)}
-                      className="text-blue-600 hover:text-blue-800 text-xs font-medium"
-                    >
-                      View
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => setSelectedRes(r)}
+                        className="text-blue-600 hover:text-blue-800 text-xs font-medium"
+                      >
+                        View
+                      </button>
+                      <button
+                        onClick={() => sendReceipt(r.id)}
+                        disabled={sendingReceipt === r.id}
+                        className="text-emerald-600 hover:text-emerald-800 text-xs font-medium disabled:opacity-50"
+                      >
+                        {sendingReceipt === r.id ? 'Sending...' : 'Send Receipt'}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
