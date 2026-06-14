@@ -46,7 +46,7 @@ async function sendDonationReceipt(donation) {
             <div style="background: #f9fafb; border-radius: 10px; padding: 24px; margin: 0 0 24px; border: 1px solid #e5e7eb;">
               <table style="width: 100%; margin-bottom: 16px;"><tr>
                 <td style="text-align: left;"><h3 style="margin: 0; font-size: 16px; color: #1B2A4A;">Receipt #${receiptNo}</h3></td>
-                <td style="text-align: right;"><span style="font-size: 13px; color: #6b7280;">${receiptDate}</span></td>
+                <td style="text-align: right; white-space: nowrap;"><span style="font-size: 13px; color: #6b7280;">${receiptDate}</span></td>
               </tr></table>
 
               <table style="width: 100%; border-collapse: collapse;">
