@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import Stripe from 'stripe';
-import nodemailer from 'nodemailer';
 import supabase from '../db/init.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { sendEmail, getAdminEmail } from '../lib/email.js';
 
 const router = Router();
 
@@ -10,28 +10,16 @@ function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY);
 }
 
-function getTransporter() {
-  return nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
-}
-
 // Send donation receipt email to donor
 async function sendDonationReceipt(donation) {
   if (!donation.donor_email) return;
   try {
-    const transporter = getTransporter();
     const amountFormatted = `$${(donation.amount / 100).toFixed(2)}`;
     const donorName = donation.donor_name || 'Friend';
     const receiptDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     const donationType = donation.is_monthly ? 'Monthly Donation' : 'One-Time Donation';
 
-    await transporter.sendMail({
-      from: `"Step of Hope Foundation" <${process.env.EMAIL_USER}>`,
+    await sendEmail({
       to: donation.donor_email,
       subject: `Thank You for Your Donation — Step of Hope Foundation`,
       html: `
@@ -122,13 +110,10 @@ async function sendDonationReceipt(donation) {
 // Send donation notification to admin
 async function sendDonationAdminNotification(donation) {
   try {
-    const transporter = getTransporter();
-    const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_USER;
     const amountFormatted = `$${(donation.amount / 100).toFixed(2)}`;
 
-    await transporter.sendMail({
-      from: `"Step of Hope System" <${process.env.EMAIL_USER}>`,
-      to: adminEmail,
+    await sendEmail({
+      to: getAdminEmail(),
       subject: `New Donation — ${amountFormatted} from ${donation.donor_name || 'Anonymous'}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">

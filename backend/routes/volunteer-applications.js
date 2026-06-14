@@ -1,31 +1,19 @@
 import { Router } from 'express';
-import nodemailer from 'nodemailer';
 import supabase from '../db/init.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { sendEmail, getAdminEmail } from '../lib/email.js';
 
 const router = Router();
-
-function getTransporter() {
-  return nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
-}
 
 // ─── Automatic Emails ────────────────────────────────────────────────
 
 async function sendThankYouEmail(app) {
   try {
-    const transporter = getTransporter();
     const interests = (() => {
       try { return JSON.parse(app.interests).join(', '); } catch { return app.interests || 'N/A'; }
     })();
 
-    await transporter.sendMail({
-      from: `"Step of Hope" <${process.env.EMAIL_USER}>`,
+    await sendEmail({
       to: app.email,
       subject: 'Thank You for Applying to Volunteer with Step of Hope!',
       html: `
@@ -66,15 +54,12 @@ async function sendThankYouEmail(app) {
 
 async function sendAdminApplicationNotification(app) {
   try {
-    const transporter = getTransporter();
-    const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_USER;
     const interests = (() => {
       try { return JSON.parse(app.interests).join(', '); } catch { return app.interests || 'N/A'; }
     })();
 
-    await transporter.sendMail({
-      from: `"Step of Hope System" <${process.env.EMAIL_USER}>`,
-      to: adminEmail,
+    await sendEmail({
+      to: getAdminEmail(),
       subject: `New Volunteer Application - ${app.first_name} ${app.last_name}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -430,7 +415,6 @@ router.post('/admin/bulk-email', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'No volunteers match the selected filters.' });
     }
 
-    const transporter = getTransporter();
     let sent = 0;
     let failed = 0;
 
@@ -441,8 +425,7 @@ router.post('/admin/bulk-email', authenticateToken, async (req, res) => {
           .replace(/\{last_name\}/g, vol.last_name)
           .replace(/\{full_name\}/g, `${vol.first_name} ${vol.last_name}`);
 
-        await transporter.sendMail({
-          from: `"Step of Hope" <${process.env.EMAIL_USER}>`,
+        await sendEmail({
           to: vol.email,
           subject,
           html: `

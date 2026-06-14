@@ -1,23 +1,13 @@
 import { Router } from 'express';
 import Stripe from 'stripe';
-import nodemailer from 'nodemailer';
 import supabase from '../db/init.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { sendEmail, getAdminEmail } from '../lib/email.js';
 
 const router = Router();
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY);
-}
-
-function getTransporter() {
-  return nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
 }
 
 // Default pricing (used as fallback)
@@ -198,7 +188,6 @@ function buildLineItems(serviceType, options, p) {
 // Send confirmation receipt email to customer
 async function sendConfirmationEmail(reservation) {
   try {
-    const transporter = getTransporter();
     const totalFormatted = `$${(reservation.total_amount / 100).toFixed(2)}`;
     const serviceName = reservation.service_type === 'photobooth' ? 'Photobooth' : '360 Video Booth';
     const eventDate = new Date(reservation.event_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -217,8 +206,7 @@ async function sendConfirmationEmail(reservation) {
       `<tr><td style="padding: 8px 0; font-size: 14px; color: #374151;">${a.name}</td><td style="padding: 8px 0; font-size: 14px; color: #374151; text-align: right;">${a.price}</td></tr>`
     ).join('');
 
-    await transporter.sendMail({
-      from: `"Step of Hope Foundation" <${process.env.EMAIL_USER}>`,
+    await sendEmail({
       to: reservation.email,
       subject: `Receipt — Your ${serviceName} Reservation with Step of Hope`,
       html: `
@@ -322,13 +310,10 @@ async function sendConfirmationEmail(reservation) {
 // Send notification email to admin
 async function sendAdminNotification(reservation) {
   try {
-    const transporter = getTransporter();
-    const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_USER;
     const totalFormatted = `$${(reservation.total_amount / 100).toFixed(2)}`;
 
-    await transporter.sendMail({
-      from: `"Step of Hope System" <${process.env.EMAIL_USER}>`,
-      to: adminEmail,
+    await sendEmail({
+      to: getAdminEmail(),
       subject: `New Reservation - ${reservation.service_type === 'photobooth' ? 'Photobooth' : '360 Video Booth'} - ${reservation.full_name}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">

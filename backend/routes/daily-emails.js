@@ -1,20 +1,10 @@
 import { Router } from 'express';
-import nodemailer from 'nodemailer';
 import supabase from '../db/init.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { generateDailySummary } from './ai-assistant.js';
+import { sendEmail, getAdminEmail } from '../lib/email.js';
 
 const router = Router();
-
-function getTransporter() {
-  return nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
-}
 
 // Send daily report manually (or triggered by cron)
 router.post('/admin/send', authenticateToken, async (req, res) => {
@@ -40,17 +30,14 @@ router.get('/admin/last', authenticateToken, async (req, res) => {
 
 // Send daily report email
 export async function sendDailyEmail(summary) {
-  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminEmail = getAdminEmail();
   if (!adminEmail) return;
-
-  const transporter = getTransporter();
 
   const html = buildEmailHTML(summary);
 
-  await transporter.sendMail({
-    from: `"Step of Hope Admin" <${process.env.EMAIL_USER}>`,
+  await sendEmail({
     to: adminEmail,
-    subject: `📊 Daily Report - Step of Hope (${summary.date})`,
+    subject: `Daily Report - Step of Hope (${summary.date})`,
     html,
   });
 }
