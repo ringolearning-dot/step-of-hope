@@ -143,7 +143,7 @@ const impactCards = [
 
 const pillars = [
   {
-    emoji: '😊',
+    emoji: '',
     title: 'Creating Smiles',
     color: 'from-hope/10 to-hope-light/5',
     accent: 'text-hope',
@@ -174,7 +174,7 @@ const pillars = [
     ],
   },
   {
-    emoji: '🎉',
+    emoji: '',
     title: 'Creating Memories',
     color: 'from-gold/10 to-gold-light/5',
     accent: 'text-gold',
@@ -205,7 +205,7 @@ const pillars = [
     ],
   },
   {
-    emoji: '❤️',
+    emoji: '',
     title: 'Creating Hope',
     color: 'from-navy/10 to-navy/5',
     accent: 'text-navy',
@@ -408,7 +408,6 @@ export default function Home() {
               <motion.div key={pillar.title} variants={fadeUp}>
                 {/* Pillar header */}
                 <div className="flex items-center gap-4 mb-3">
-                  <span className="text-4xl">{pillar.emoji}</span>
                   <h3
                     className={`font-display text-2xl sm:text-3xl font-bold ${pillar.accent}`}
                   >
