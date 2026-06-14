@@ -10,6 +10,18 @@ import {
   HiCake,
   HiStar,
   HiUsers,
+  HiCamera,
+  HiCalendarDays,
+  HiAcademicCap,
+  HiHome,
+  HiTrophy,
+  HiBanknotes,
+  HiHandRaised,
+  HiMegaphone,
+  HiMusicalNote,
+  HiSun,
+  HiShieldCheck,
+  HiFire,
 } from 'react-icons/hi2';
 import api, { getImageUrl } from '../lib/api';
 import useContent from '../lib/useContent';
@@ -129,36 +141,109 @@ const impactCards = [
   },
 ];
 
-const whatWeDo = [
+const pillars = [
   {
-    icon: HiSparkles,
-    title: 'Joyful Experiences',
-    desc: 'We organize outings, theme-park visits, and special events that allow children to simply be kids again — laughing, playing, and making memories.',
+    emoji: '😊',
+    title: 'Creating Smiles',
+    color: 'from-hope/10 to-hope-light/5',
+    accent: 'text-hope',
+    border: 'border-hope/20',
+    tagline:
+      'We bring light to children facing serious illnesses through hospital visits, surprise gifts, and moments of pure joy.',
+    programs: [
+      {
+        icon: HiHeart,
+        title: 'Hospital Visits & Smile Missions',
+        desc: 'We visit children in hospitals and treatment centers to bring joy, encouragement, and hope through gifts, activities, games, and personal interactions.',
+      },
+      {
+        icon: HiGift,
+        title: 'Hope Packages & Gifts',
+        desc: 'Care packages filled with toys, books, crafts, blankets, and comfort items for children undergoing treatment or long hospital stays.',
+      },
+      {
+        icon: HiCamera,
+        title: 'A Smile for a Smile',
+        desc: 'Children receive a free photo booth session and keepsake photos during hospital visits and events.',
+      },
+      {
+        icon: HiAcademicCap,
+        title: 'Back-to-School Smiles',
+        desc: 'Backpacks, school supplies, and encouragement for children returning to school after treatment.',
+      },
+    ],
   },
   {
-    icon: HiGift,
-    title: 'Gifts & Surprise Visits',
-    desc: 'Unexpected gifts and personal visits brighten hospital stays, reminding children and families that a whole community is cheering them on.',
+    emoji: '🎉',
+    title: 'Creating Memories',
+    color: 'from-gold/10 to-gold-light/5',
+    accent: 'text-gold',
+    border: 'border-gold/20',
+    tagline:
+      'Every child deserves magical moments. We create unforgettable celebrations, outings, and experiences for children and families.',
+    programs: [
+      {
+        icon: HiCake,
+        title: 'Dream Birthday Program',
+        desc: 'Unforgettable birthday celebrations with decorations, entertainment, animators, photography, cakes, personalized gifts, and themed celebrations based on each child\u2019s dreams.',
+      },
+      {
+        icon: HiCalendarDays,
+        title: 'Holiday & Seasonal Celebrations',
+        desc: 'Year-round events including Christmas, Easter egg hunts, Halloween costume events, Thanksgiving gatherings, Welcome Summer parties, and more.',
+      },
+      {
+        icon: HiSun,
+        title: 'Family Fun Days',
+        desc: 'Uplifting activities for the whole family \u2014 nature walks, picnics, movie nights, arts & crafts, zoo visits, and community outings.',
+      },
+      {
+        icon: HiStar,
+        title: 'Wishes Come True',
+        desc: 'Small wish-granting program where children can request something special \u2014 meeting a firefighter, visiting a police station, going to a baseball game, or having a superhero-themed day.',
+      },
+    ],
   },
   {
-    icon: HiHeart,
-    title: 'Hospital Support',
-    desc: 'We provide comfort items, care packages, and emotional support to families navigating long hospital stays and challenging treatments.',
-  },
-  {
-    icon: HiCake,
-    title: 'Birthday Celebrations',
-    desc: 'Every child deserves a birthday to remember. We plan celebrations filled with joy, cake, and love — no matter the circumstances.',
-  },
-  {
-    icon: HiGift,
-    title: 'Hope Packages',
-    desc: 'We prepare thoughtful care packages filled with comfort items, toys, essentials, and encouragement for children and families in need.',
-  },
-  {
-    icon: HiUsers,
-    title: 'Family Support',
-    desc: 'We walk alongside entire families — parents, siblings, and caregivers — offering resources, connections, and a compassionate community.',
+    emoji: '❤️',
+    title: 'Creating Hope',
+    color: 'from-navy/10 to-navy/5',
+    accent: 'text-navy',
+    border: 'border-navy/20',
+    tagline:
+      'We stand alongside families during their hardest moments \u2014 providing financial assistance, building community, and fundraising for the future.',
+    programs: [
+      {
+        icon: HiBanknotes,
+        title: 'Financial Assistance',
+        desc: 'Helping families facing financial hardships with transportation expenses, medical-related needs, essential support services, and emergency assistance.',
+      },
+      {
+        icon: HiUsers,
+        title: 'Serena\u2019s Support Circle',
+        desc: 'A support program connecting families facing similar challenges, allowing them to share experiences, resources, and encouragement.',
+      },
+      {
+        icon: HiMegaphone,
+        title: 'Community Events & Fundraisers',
+        desc: 'Community events that raise awareness and funds so we can continue supporting children and families. Every dollar brings more smiles and hope.',
+      },
+      {
+        icon: HiHandRaised,
+        title: 'Hope Heroes',
+        desc: 'Volunteer program where community members can sponsor a child, donate gifts, or participate in events.',
+      },
+      {
+        icon: HiGift,
+        title: 'Holiday Toy Drive',
+        desc: 'Annual toy collection and distribution for children spending holidays in hospitals or recovering at home.',
+      },
+      {
+        icon: HiFire,
+        title: 'Longest Walk for Hope',
+        desc: 'Awareness and fundraising walks that bring communities together while supporting children battling serious illnesses.',
+      },
+    ],
   },
 ];
 
@@ -298,33 +383,61 @@ export default function Home() {
       </section>
 
       {/* ============================================================ */}
-      {/*  4. WHAT WE DO                                               */}
+      {/*  4. WHAT WE DO — THREE PILLARS                               */}
       {/* ============================================================ */}
       <section className="py-20 md:py-28 bg-white">
         <AnimatedSection className="max-w-6xl mx-auto px-6">
-          <motion.div variants={fadeUp} className="text-center mb-14">
+          <motion.div variants={fadeUp} className="text-center mb-6">
             <span className="font-body text-hope font-semibold tracking-wider uppercase text-sm">
-              Our Programs
+              Our Mission in Action
             </span>
             <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-navy mt-2 leading-tight">
               What We Do
             </h2>
           </motion.div>
+          <motion.p
+            variants={fadeUp}
+            className="font-body text-navy/60 text-lg text-center max-w-3xl mx-auto mb-16 leading-relaxed"
+          >
+            Everything we do is built around three promises to the children and
+            families we serve — to create smiles, memories, and lasting hope.
+          </motion.p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {whatWeDo.map((item) => (
-              <motion.div
-                key={item.title}
-                variants={fadeUp}
-                className="border border-navy/10 rounded-2xl p-7 hover:shadow-xl transition-shadow group bg-bg-warm/40"
-              >
-                <item.icon className="w-10 h-10 text-hope mb-4 group-hover:scale-110 transition-transform" />
-                <h3 className="font-display text-xl font-bold text-navy mb-2">
-                  {item.title}
-                </h3>
-                <p className="font-body text-navy/65 leading-relaxed text-sm">
-                  {item.desc}
+          <div className="space-y-16">
+            {pillars.map((pillar) => (
+              <motion.div key={pillar.title} variants={fadeUp}>
+                {/* Pillar header */}
+                <div className="flex items-center gap-4 mb-3">
+                  <span className="text-4xl">{pillar.emoji}</span>
+                  <h3
+                    className={`font-display text-2xl sm:text-3xl font-bold ${pillar.accent}`}
+                  >
+                    {pillar.title}
+                  </h3>
+                </div>
+                <p className="font-body text-navy/60 leading-relaxed mb-8 max-w-3xl">
+                  {pillar.tagline}
                 </p>
+
+                {/* Program cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {pillar.programs.map((program) => (
+                    <div
+                      key={program.title}
+                      className={`border ${pillar.border} rounded-2xl p-6 bg-gradient-to-br ${pillar.color} hover:shadow-lg transition-shadow group`}
+                    >
+                      <program.icon
+                        className={`w-9 h-9 ${pillar.accent} mb-3 group-hover:scale-110 transition-transform`}
+                      />
+                      <h4 className="font-display text-lg font-bold text-navy mb-2">
+                        {program.title}
+                      </h4>
+                      <p className="font-body text-navy/60 leading-relaxed text-sm">
+                        {program.desc}
+                      </p>
+                    </div>
+                  ))}
+                </div>
               </motion.div>
             ))}
           </div>
