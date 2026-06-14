@@ -30,9 +30,9 @@ export function getAdminEmail() {
  * @param {'R'|'D'} type - R for reservation, D for donation
  * @param {string|number} id - The database record id
  */
-export function receiptNumber(type, id) {
-  const now = new Date();
-  const date = now.toISOString().slice(0, 10).replace(/-/g, '');
+export function receiptNumber(type, id, createdAt) {
+  const d = createdAt ? new Date(createdAt) : new Date();
+  const date = d.toISOString().slice(0, 10).replace(/-/g, '');
   const short = typeof id === 'number'
     ? String(id).padStart(4, '0')
     : String(id).split('-')[0].toUpperCase();

@@ -38,6 +38,7 @@ const navSections = [
       { to: '/admin/donations', label: 'Donations', icon: HiCurrencyDollar },
       { to: '/admin/expenses', label: 'Expenses', icon: HiReceiptPercent },
       { to: '/admin/recurring-bills', label: 'Recurring Bills', icon: HiBanknotes },
+      { to: '/admin/receipts', label: 'Receipts', icon: HiDocumentText },
       { to: '/admin/reports', label: 'Reports', icon: HiClipboardDocumentList },
     ],
   },

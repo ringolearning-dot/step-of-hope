@@ -37,6 +37,7 @@ import ActivityLogsAdmin from './pages/admin/ActivityLogsAdmin';
 import NotificationsAdmin from './pages/admin/NotificationsAdmin';
 import AdminUsersAdmin from './pages/admin/AdminUsersAdmin';
 import DocumentsAdmin from './pages/admin/DocumentsAdmin';
+import ReceiptsAdmin from './pages/admin/ReceiptsAdmin';
 
 export default function App() {
   return (
@@ -77,6 +78,7 @@ export default function App() {
             <Route path="donations" element={<DonationsAdmin />} />
             <Route path="expenses" element={<ExpensesAdmin />} />
             <Route path="recurring-bills" element={<RecurringBillsAdmin />} />
+            <Route path="receipts" element={<ReceiptsAdmin />} />
             <Route path="reports" element={<ReportsAdmin />} />
             <Route path="reservations" element={<ReservationsAdmin />} />
             <Route path="promo-codes" element={<PromoCodesAdmin />} />

@@ -16,9 +16,10 @@ async function sendDonationReceipt(donation) {
   try {
     const amountFormatted = `$${(donation.amount / 100).toFixed(2)}`;
     const donorName = donation.donor_name || 'Friend';
-    const receiptDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const createdAt = donation.created_at || new Date().toISOString();
+    const receiptDate = new Date(createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     const donationType = donation.is_monthly ? 'Monthly Donation' : 'One-Time Donation';
-    const receiptNo = receiptNumber('D', donation.id);
+    const receiptNo = receiptNumber('D', donation.id, createdAt);
 
     await sendEmail({
       to: donation.donor_email,
@@ -465,6 +466,26 @@ router.get('/admin/stats', authenticateToken, async (req, res) => {
   } catch (err) {
     console.error('Admin stats error:', err.message);
     res.status(500).json({ error: 'Failed to fetch stats.' });
+  }
+});
+
+// Resend receipt email to donor
+router.post('/admin/:id/send-receipt', authenticateToken, async (req, res) => {
+  try {
+    const { data: donation, error } = await supabase
+      .from('donations')
+      .select('*')
+      .eq('id', req.params.id)
+      .single();
+
+    if (error || !donation) return res.status(404).json({ error: 'Donation not found.' });
+    if (!donation.donor_email) return res.status(400).json({ error: 'No email address on file for this donation.' });
+
+    await sendDonationReceipt(donation);
+    res.json({ message: 'Receipt email sent.' });
+  } catch (err) {
+    console.error('Resend donation receipt error:', err.message);
+    res.status(500).json({ error: 'Failed to send receipt email.' });
   }
 });
 

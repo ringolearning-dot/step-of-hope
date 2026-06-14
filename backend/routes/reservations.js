@@ -191,8 +191,9 @@ async function sendConfirmationEmail(reservation) {
     const totalFormatted = `$${(reservation.total_amount / 100).toFixed(2)}`;
     const serviceName = reservation.service_type === 'photobooth' ? 'Photobooth' : '360 Video Booth';
     const eventDate = new Date(reservation.event_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    const receiptDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-    const receiptNo = receiptNumber('R', reservation.id);
+    const createdAt = reservation.created_at || new Date().toISOString();
+    const receiptDate = new Date(createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const receiptNo = receiptNumber('R', reservation.id, createdAt);
 
     const addOns = [];
     if (reservation.service_type === 'photobooth' && reservation.custom_backdrop) {
