@@ -2,7 +2,7 @@ import { Router } from 'express';
 import Stripe from 'stripe';
 import supabase from '../db/init.js';
 import { authenticateToken } from '../middleware/auth.js';
-import { sendEmail, getAdminEmail } from '../lib/email.js';
+import { sendEmail, getAdminEmail, receiptNumber } from '../lib/email.js';
 
 const router = Router();
 
@@ -18,6 +18,7 @@ async function sendDonationReceipt(donation) {
     const donorName = donation.donor_name || 'Friend';
     const receiptDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
     const donationType = donation.is_monthly ? 'Monthly Donation' : 'One-Time Donation';
+    const receiptNo = receiptNumber('D', donation.id);
 
     await sendEmail({
       to: donation.donor_email,
@@ -28,6 +29,7 @@ async function sendDonationReceipt(donation) {
           <div style="background: linear-gradient(135deg, #1B2A4A, #2C3E6B); padding: 40px 30px; text-align: center; border-radius: 12px 12px 0 0;">
             <h1 style="color: #fff; margin: 0; font-size: 28px; letter-spacing: 1px;">Step of Hope Foundation</h1>
             <p style="color: rgba(255,255,255,0.6); margin: 8px 0 0; font-size: 13px; letter-spacing: 0.5px;">DONATION RECEIPT</p>
+            <p style="color: rgba(255,255,255,0.4); margin: 6px 0 0; font-size: 12px; font-family: monospace;">${receiptNo}</p>
           </div>
 
           <!-- Body -->
@@ -43,10 +45,10 @@ async function sendDonationReceipt(donation) {
 
             <!-- Receipt Box -->
             <div style="background: #f9fafb; border-radius: 10px; padding: 24px; margin: 0 0 24px; border: 1px solid #e5e7eb;">
-              <div style="margin-bottom: 16px;">
-                <h3 style="margin: 0; font-size: 16px; color: #1B2A4A; display: inline;">Donation Receipt</h3>
-                <span style="font-size: 13px; color: #6b7280; float: right;">${receiptDate}</span>
-              </div>
+              <table style="width: 100%; margin-bottom: 16px;"><tr>
+                <td style="text-align: left;"><h3 style="margin: 0; font-size: 16px; color: #1B2A4A;">Receipt #${receiptNo}</h3></td>
+                <td style="text-align: right;"><span style="font-size: 13px; color: #6b7280;">${receiptDate}</span></td>
+              </tr></table>
 
               <table style="width: 100%; border-collapse: collapse;">
                 <tr style="border-bottom: 1px solid #e5e7eb;">
