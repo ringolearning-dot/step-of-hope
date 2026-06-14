@@ -312,9 +312,10 @@ async function sendConfirmationEmail(reservation) {
 async function sendAdminNotification(reservation) {
   try {
     const totalFormatted = `$${(reservation.total_amount / 100).toFixed(2)}`;
+    const recipients = [getAdminEmail(), 'onecallproduction@gmail.com'];
 
     await sendEmail({
-      to: getAdminEmail(),
+      to: recipients,
       subject: `New Reservation - ${reservation.service_type === 'photobooth' ? 'Photobooth' : '360 Video Booth'} - ${reservation.full_name}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
