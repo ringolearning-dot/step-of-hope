@@ -216,7 +216,6 @@ async function sendConfirmationEmail(reservation) {
           <div style="background: linear-gradient(135deg, #1B2A4A, #2C3E6B); padding: 40px 30px; text-align: center; border-radius: 12px 12px 0 0;">
             <h1 style="color: #fff; margin: 0; font-size: 28px; letter-spacing: 1px;">Step of Hope Foundation</h1>
             <p style="color: rgba(255,255,255,0.6); margin: 8px 0 0; font-size: 13px; letter-spacing: 0.5px;">RESERVATION RECEIPT</p>
-            <p style="color: rgba(255,255,255,0.4); margin: 6px 0 0; font-size: 12px; font-family: monospace;">${receiptNo}</p>
           </div>
 
           <!-- Body -->

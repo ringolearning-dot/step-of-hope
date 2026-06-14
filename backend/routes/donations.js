@@ -29,7 +29,6 @@ async function sendDonationReceipt(donation) {
           <div style="background: linear-gradient(135deg, #1B2A4A, #2C3E6B); padding: 40px 30px; text-align: center; border-radius: 12px 12px 0 0;">
             <h1 style="color: #fff; margin: 0; font-size: 28px; letter-spacing: 1px;">Step of Hope Foundation</h1>
             <p style="color: rgba(255,255,255,0.6); margin: 8px 0 0; font-size: 13px; letter-spacing: 0.5px;">DONATION RECEIPT</p>
-            <p style="color: rgba(255,255,255,0.4); margin: 6px 0 0; font-size: 12px; font-family: monospace;">${receiptNo}</p>
           </div>
 
           <!-- Body -->
@@ -81,12 +80,6 @@ async function sendDonationReceipt(donation) {
               </p>
             </div>
 
-            <!-- Tax note -->
-            <div style="background: #f0fdf4; border-radius: 8px; padding: 16px 20px; margin: 24px 0; border: 1px solid #bbf7d0;">
-              <p style="margin: 0; font-size: 13px; color: #374151; line-height: 1.6;">
-                <strong>Tax Information:</strong> Step of Hope Foundation is a registered 501(c)(3) nonprofit organization. Your donation may be tax-deductible to the extent allowed by law. Please retain this receipt for your records. No goods or services were provided in exchange for this contribution.
-              </p>
-            </div>
           </div>
 
           <!-- Footer -->
