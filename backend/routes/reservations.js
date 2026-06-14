@@ -195,55 +195,121 @@ function buildLineItems(serviceType, options, p) {
   return items;
 }
 
-// Send confirmation email to customer
+// Send confirmation receipt email to customer
 async function sendConfirmationEmail(reservation) {
   try {
     const transporter = getTransporter();
     const totalFormatted = `$${(reservation.total_amount / 100).toFixed(2)}`;
+    const serviceName = reservation.service_type === 'photobooth' ? 'Photobooth' : '360 Video Booth';
+    const eventDate = new Date(reservation.event_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const receiptDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    const addOns = [];
+    if (reservation.service_type === 'photobooth' && reservation.custom_backdrop) {
+      addOns.push({ name: 'Custom Backdrop', price: '$200.00' });
+    }
+    if (reservation.service_type === '360booth' && reservation.with_tent) {
+      addOns.push({ name: 'Tent Enclosure', price: 'Included' });
+    }
+    const extraHours = reservation.num_hours - 3;
+
+    const addOnRows = addOns.map(a =>
+      `<tr><td style="padding: 8px 0; font-size: 14px; color: #374151;">${a.name}</td><td style="padding: 8px 0; font-size: 14px; color: #374151; text-align: right;">${a.price}</td></tr>`
+    ).join('');
 
     await transporter.sendMail({
-      from: `"Step of Hope" <${process.env.EMAIL_USER}>`,
+      from: `"Step of Hope Foundation" <${process.env.EMAIL_USER}>`,
       to: reservation.email,
-      subject: 'Step of Hope Reservation Confirmation',
+      subject: `Receipt — Your ${serviceName} Reservation with Step of Hope`,
       html: `
         <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1B2A4A;">
+          <!-- Header -->
           <div style="background: linear-gradient(135deg, #1B2A4A, #2C3E6B); padding: 40px 30px; text-align: center; border-radius: 12px 12px 0 0;">
-            <h1 style="color: #fff; margin: 0; font-size: 28px;">Step of Hope</h1>
-            <p style="color: rgba(255,255,255,0.7); margin: 8px 0 0; font-size: 14px;">Reservation Confirmation</p>
+            <h1 style="color: #fff; margin: 0; font-size: 28px; letter-spacing: 1px;">Step of Hope Foundation</h1>
+            <p style="color: rgba(255,255,255,0.6); margin: 8px 0 0; font-size: 13px; letter-spacing: 0.5px;">RESERVATION RECEIPT</p>
           </div>
-          <div style="background: #fff; padding: 30px; border: 1px solid #e5e7eb; border-top: none;">
-            <p style="font-size: 16px; margin-bottom: 20px;">Dear <strong>${reservation.full_name}</strong>,</p>
-            <p style="font-size: 15px; line-height: 1.6; color: #374151;">
-              Thank you for reserving with Step of Hope.
+
+          <!-- Body -->
+          <div style="background: #fff; padding: 32px 30px; border: 1px solid #e5e7eb; border-top: none;">
+            <!-- Thank you message -->
+            <p style="font-size: 16px; margin: 0 0 16px;">Dear <strong>${reservation.full_name}</strong>,</p>
+            <p style="font-size: 15px; line-height: 1.7; color: #374151; margin: 0 0 8px;">
+              Thank you for your reservation with Step of Hope Foundation!
             </p>
-            <p style="font-size: 15px; line-height: 1.6; color: #374151;">
-              We received your reservation request and payment. Our team will review your event details
-              and contact you to confirm final setup details, backdrop selection, timing, and any special requests.
+            <p style="font-size: 15px; line-height: 1.7; color: #374151; margin: 0 0 24px;">
+              We are honored to be part of your special event. Your photobooth or 360 video booth reservation is doing more than creating fun memories — it is helping bring smiles, hope, and joy to children facing serious illnesses and difficult challenges.
             </p>
 
-            <div style="background: #f9fafb; border-radius: 8px; padding: 20px; margin: 24px 0;">
-              <h3 style="margin: 0 0 16px; font-size: 16px; color: #1B2A4A;">Reservation Details</h3>
-              <table style="width: 100%; font-size: 14px; color: #374151;">
-                <tr><td style="padding: 6px 0; color: #6b7280;">Service:</td><td style="padding: 6px 0; font-weight: 600;">${reservation.service_type === 'photobooth' ? 'Photobooth' : '360 Video Booth'}</td></tr>
-                <tr><td style="padding: 6px 0; color: #6b7280;">Event Date:</td><td style="padding: 6px 0; font-weight: 600;">${new Date(reservation.event_date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</td></tr>
-                <tr><td style="padding: 6px 0; color: #6b7280;">Start Time:</td><td style="padding: 6px 0; font-weight: 600;">${reservation.start_time}</td></tr>
-                <tr><td style="padding: 6px 0; color: #6b7280;">Duration:</td><td style="padding: 6px 0; font-weight: 600;">${reservation.num_hours} hour(s)</td></tr>
-                <tr><td style="padding: 6px 0; color: #6b7280;">Event Type:</td><td style="padding: 6px 0; font-weight: 600;">${reservation.event_type}</td></tr>
-                <tr><td style="padding: 6px 0; color: #6b7280;">Location:</td><td style="padding: 6px 0; font-weight: 600;">${reservation.event_address}</td></tr>
-                <tr><td style="padding: 6px 0; color: #6b7280;">Guests:</td><td style="padding: 6px 0; font-weight: 600;">${reservation.estimated_guests}</td></tr>
-                <tr><td style="padding: 6px 0; color: #6b7280; border-top: 1px solid #e5e7eb; padding-top: 12px;">Total Paid:</td><td style="padding: 6px 0; font-weight: 700; font-size: 16px; color: #059669; border-top: 1px solid #e5e7eb; padding-top: 12px;">${totalFormatted}</td></tr>
+            <!-- Receipt Details -->
+            <div style="background: #f9fafb; border-radius: 10px; padding: 24px; margin: 0 0 24px; border: 1px solid #e5e7eb;">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+                <h3 style="margin: 0; font-size: 16px; color: #1B2A4A;">Receipt Details</h3>
+                <span style="font-size: 13px; color: #6b7280;">${receiptDate}</span>
+              </div>
+
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                  <td style="padding: 10px 0; font-size: 13px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">Item</td>
+                  <td style="padding: 10px 0; font-size: 13px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; text-align: right;">Details</td>
+                </tr>
+                <tr><td style="padding: 8px 0; font-size: 14px; color: #374151;">Service</td><td style="padding: 8px 0; font-size: 14px; color: #374151; text-align: right; font-weight: 600;">${serviceName}</td></tr>
+                <tr><td style="padding: 8px 0; font-size: 14px; color: #374151;">Event Date</td><td style="padding: 8px 0; font-size: 14px; color: #374151; text-align: right; font-weight: 600;">${eventDate}</td></tr>
+                <tr><td style="padding: 8px 0; font-size: 14px; color: #374151;">Start Time</td><td style="padding: 8px 0; font-size: 14px; color: #374151; text-align: right; font-weight: 600;">${reservation.start_time}</td></tr>
+                <tr><td style="padding: 8px 0; font-size: 14px; color: #374151;">Duration</td><td style="padding: 8px 0; font-size: 14px; color: #374151; text-align: right; font-weight: 600;">${reservation.num_hours} hour${reservation.num_hours > 1 ? 's' : ''}${extraHours > 0 ? ' (3 base + ' + extraHours + ' extra)' : ''}</td></tr>
+                <tr><td style="padding: 8px 0; font-size: 14px; color: #374151;">Event Type</td><td style="padding: 8px 0; font-size: 14px; color: #374151; text-align: right; font-weight: 600;">${reservation.event_type}</td></tr>
+                <tr><td style="padding: 8px 0; font-size: 14px; color: #374151;">Location</td><td style="padding: 8px 0; font-size: 14px; color: #374151; text-align: right; font-weight: 600;">${reservation.event_address}</td></tr>
+                <tr><td style="padding: 8px 0; font-size: 14px; color: #374151;">Indoor / Outdoor</td><td style="padding: 8px 0; font-size: 14px; color: #374151; text-align: right; font-weight: 600;">${reservation.indoor_outdoor || 'N/A'}</td></tr>
+                <tr><td style="padding: 8px 0; font-size: 14px; color: #374151;">Estimated Guests</td><td style="padding: 8px 0; font-size: 14px; color: #374151; text-align: right; font-weight: 600;">${reservation.estimated_guests}</td></tr>
+                ${reservation.backdrop_choice ? `<tr><td style="padding: 8px 0; font-size: 14px; color: #374151;">Backdrop</td><td style="padding: 8px 0; font-size: 14px; color: #374151; text-align: right; font-weight: 600;">${reservation.backdrop_choice}</td></tr>` : ''}
+                ${addOnRows}
               </table>
+
+              <!-- Total -->
+              <div style="border-top: 2px solid #1B2A4A; margin-top: 12px; padding-top: 14px; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 15px; font-weight: 700; color: #1B2A4A;">TOTAL PAID</span>
+                <span style="font-size: 22px; font-weight: 800; color: #059669;">${totalFormatted}</span>
+              </div>
             </div>
 
-            <p style="font-size: 15px; line-height: 1.6; color: #374151;">
-              Your reservation helps support Step of Hope's mission to bring smiles to children and families in need.
-            </p>
-            <p style="font-size: 15px; line-height: 1.6; color: #1B2A4A; font-weight: 600; font-style: italic; margin-top: 20px;">
-              Never lose hope. Keep on fighting.
+            <!-- Customer info -->
+            <div style="background: #f0fdf4; border-radius: 8px; padding: 16px 20px; margin: 0 0 24px; border: 1px solid #bbf7d0;">
+              <p style="margin: 0 0 4px; font-size: 13px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">Billed To</p>
+              <p style="margin: 0; font-size: 14px; font-weight: 600; color: #1B2A4A;">${reservation.full_name}</p>
+              <p style="margin: 2px 0 0; font-size: 14px; color: #374151;">${reservation.email}</p>
+              <p style="margin: 2px 0 0; font-size: 14px; color: #374151;">${reservation.phone}</p>
+              ${reservation.organization ? `<p style="margin: 2px 0 0; font-size: 14px; color: #374151;">${reservation.organization}</p>` : ''}
+            </div>
+
+            ${reservation.special_requests ? `
+            <div style="background: #fefce8; border-radius: 8px; padding: 16px 20px; margin: 0 0 24px; border: 1px solid #fde68a;">
+              <p style="margin: 0 0 4px; font-size: 13px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">Special Requests</p>
+              <p style="margin: 0; font-size: 14px; color: #374151;">${reservation.special_requests}</p>
+            </div>
+            ` : ''}
+
+            <!-- Mission message -->
+            <div style="border-left: 4px solid #C8A951; padding-left: 20px; margin: 24px 0;">
+              <p style="font-size: 15px; line-height: 1.7; color: #374151; margin: 0 0 12px;">
+                Because of your support, we can continue organizing hospital visits, dream birthdays, holiday celebrations, and special events that make a real difference in a child's life.
+              </p>
+              <p style="font-size: 15px; line-height: 1.7; color: #374151; margin: 0 0 12px;">
+                Thank you for helping us turn moments into memories and kindness into hope.
+              </p>
+              <p style="font-size: 15px; line-height: 1.7; color: #374151; margin: 0;">
+                We look forward to celebrating with you!
+              </p>
+            </div>
+
+            <p style="font-size: 15px; line-height: 1.6; color: #374151; margin: 24px 0 0;">
+              Our team will be in touch to confirm final setup details, backdrop selection, timing, and any special requests.
             </p>
           </div>
-          <div style="background: #f3f4f6; padding: 20px 30px; text-align: center; border-radius: 0 0 12px 12px; border: 1px solid #e5e7eb; border-top: none;">
-            <p style="font-size: 12px; color: #9ca3af; margin: 0;">Step of Hope Foundation</p>
+
+          <!-- Footer -->
+          <div style="background: #1B2A4A; padding: 24px 30px; text-align: center; border-radius: 0 0 12px 12px;">
+            <p style="color: #C8A951; font-size: 14px; font-weight: 600; font-style: italic; margin: 0 0 8px;">"Every Child Deserves to Smile"</p>
+            <p style="font-size: 13px; color: rgba(255,255,255,0.5); margin: 0 0 4px;">Step of Hope Foundation</p>
+            <a href="https://www.stepofhope.org" style="font-size: 13px; color: rgba(255,255,255,0.7); text-decoration: none;">www.stepofhope.org</a>
           </div>
         </div>
       `,

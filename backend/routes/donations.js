@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import Stripe from 'stripe';
+import nodemailer from 'nodemailer';
 import supabase from '../db/init.js';
 import { authenticateToken } from '../middleware/auth.js';
 
@@ -7,6 +8,143 @@ const router = Router();
 
 function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY);
+}
+
+function getTransporter() {
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+}
+
+// Send donation receipt email to donor
+async function sendDonationReceipt(donation) {
+  if (!donation.donor_email) return;
+  try {
+    const transporter = getTransporter();
+    const amountFormatted = `$${(donation.amount / 100).toFixed(2)}`;
+    const donorName = donation.donor_name || 'Friend';
+    const receiptDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    const donationType = donation.is_monthly ? 'Monthly Donation' : 'One-Time Donation';
+
+    await transporter.sendMail({
+      from: `"Step of Hope Foundation" <${process.env.EMAIL_USER}>`,
+      to: donation.donor_email,
+      subject: `Thank You for Your Donation — Step of Hope Foundation`,
+      html: `
+        <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1B2A4A;">
+          <!-- Header -->
+          <div style="background: linear-gradient(135deg, #1B2A4A, #2C3E6B); padding: 40px 30px; text-align: center; border-radius: 12px 12px 0 0;">
+            <h1 style="color: #fff; margin: 0; font-size: 28px; letter-spacing: 1px;">Step of Hope Foundation</h1>
+            <p style="color: rgba(255,255,255,0.6); margin: 8px 0 0; font-size: 13px; letter-spacing: 0.5px;">DONATION RECEIPT</p>
+          </div>
+
+          <!-- Body -->
+          <div style="background: #fff; padding: 32px 30px; border: 1px solid #e5e7eb; border-top: none;">
+            <!-- Thank you message -->
+            <p style="font-size: 16px; margin: 0 0 16px;">Dear <strong>${donorName}</strong>,</p>
+            <p style="font-size: 15px; line-height: 1.7; color: #374151; margin: 0 0 8px;">
+              Thank you for your generous donation to Step of Hope Foundation!
+            </p>
+            <p style="font-size: 15px; line-height: 1.7; color: #374151; margin: 0 0 24px;">
+              Your kindness is doing more than you know — it is helping bring smiles, hope, and joy to children facing serious illnesses and difficult challenges.
+            </p>
+
+            <!-- Receipt Box -->
+            <div style="background: #f9fafb; border-radius: 10px; padding: 24px; margin: 0 0 24px; border: 1px solid #e5e7eb;">
+              <div style="margin-bottom: 16px;">
+                <h3 style="margin: 0; font-size: 16px; color: #1B2A4A; display: inline;">Donation Receipt</h3>
+                <span style="font-size: 13px; color: #6b7280; float: right;">${receiptDate}</span>
+              </div>
+
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                  <td style="padding: 10px 0; font-size: 13px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">Description</td>
+                  <td style="padding: 10px 0; font-size: 13px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; text-align: right;">Amount</td>
+                </tr>
+                <tr><td style="padding: 10px 0; font-size: 14px; color: #374151;">${donationType}</td><td style="padding: 10px 0; font-size: 14px; color: #374151; text-align: right; font-weight: 600;">${amountFormatted}</td></tr>
+                <tr><td style="padding: 8px 0; font-size: 14px; color: #374151;">Donor</td><td style="padding: 8px 0; font-size: 14px; color: #374151; text-align: right; font-weight: 600;">${donorName}</td></tr>
+                ${donation.donor_email ? `<tr><td style="padding: 8px 0; font-size: 14px; color: #374151;">Email</td><td style="padding: 8px 0; font-size: 14px; color: #374151; text-align: right;">${donation.donor_email}</td></tr>` : ''}
+                ${donation.is_monthly ? `<tr><td style="padding: 8px 0; font-size: 14px; color: #374151;">Frequency</td><td style="padding: 8px 0; font-size: 14px; color: #374151; text-align: right; font-weight: 600;">Monthly (recurring)</td></tr>` : ''}
+              </table>
+
+              <!-- Total -->
+              <div style="border-top: 2px solid #1B2A4A; margin-top: 12px; padding-top: 14px;">
+                <span style="font-size: 15px; font-weight: 700; color: #1B2A4A;">TOTAL</span>
+                <span style="font-size: 22px; font-weight: 800; color: #059669; float: right;">${amountFormatted}</span>
+              </div>
+            </div>
+
+            <!-- Mission message -->
+            <div style="border-left: 4px solid #C8A951; padding-left: 20px; margin: 24px 0;">
+              <p style="font-size: 15px; line-height: 1.7; color: #374151; margin: 0 0 12px;">
+                Because of your support, we can continue organizing hospital visits, dream birthdays, holiday celebrations, and special events that make a real difference in a child's life.
+              </p>
+              <p style="font-size: 15px; line-height: 1.7; color: #374151; margin: 0 0 12px;">
+                Every dollar raised helps bring more smiles, hope, and meaningful experiences to children who need them most.
+              </p>
+              <p style="font-size: 15px; line-height: 1.7; color: #374151; margin: 0;">
+                Thank you for helping us turn kindness into hope.
+              </p>
+            </div>
+
+            <!-- Tax note -->
+            <div style="background: #f0fdf4; border-radius: 8px; padding: 16px 20px; margin: 24px 0; border: 1px solid #bbf7d0;">
+              <p style="margin: 0; font-size: 13px; color: #374151; line-height: 1.6;">
+                <strong>Tax Information:</strong> Step of Hope Foundation is a registered 501(c)(3) nonprofit organization. Your donation may be tax-deductible to the extent allowed by law. Please retain this receipt for your records. No goods or services were provided in exchange for this contribution.
+              </p>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div style="background: #1B2A4A; padding: 24px 30px; text-align: center; border-radius: 0 0 12px 12px;">
+            <p style="color: #C8A951; font-size: 14px; font-weight: 600; font-style: italic; margin: 0 0 8px;">"Every Child Deserves to Smile"</p>
+            <p style="font-size: 13px; color: rgba(255,255,255,0.5); margin: 0 0 4px;">Step of Hope Foundation</p>
+            <a href="https://www.stepofhope.org" style="font-size: 13px; color: rgba(255,255,255,0.7); text-decoration: none;">www.stepofhope.org</a>
+          </div>
+        </div>
+      `,
+    });
+
+    // Mark thank you as sent
+    await supabase
+      .from('donations')
+      .update({ thank_you_sent: true })
+      .eq('id', donation.id);
+  } catch (err) {
+    console.error('Failed to send donation receipt email:', err.message);
+  }
+}
+
+// Send donation notification to admin
+async function sendDonationAdminNotification(donation) {
+  try {
+    const transporter = getTransporter();
+    const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_USER;
+    const amountFormatted = `$${(donation.amount / 100).toFixed(2)}`;
+
+    await transporter.sendMail({
+      from: `"Step of Hope System" <${process.env.EMAIL_USER}>`,
+      to: adminEmail,
+      subject: `New Donation — ${amountFormatted} from ${donation.donor_name || 'Anonymous'}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #1B2A4A;">New Donation Received</h2>
+          <p><strong>Amount:</strong> ${amountFormatted}</p>
+          <p><strong>Donor:</strong> ${donation.donor_name || 'Anonymous'}</p>
+          <p><strong>Email:</strong> ${donation.donor_email || 'N/A'}</p>
+          <p><strong>Type:</strong> ${donation.is_monthly ? 'Monthly (recurring)' : 'One-Time'}</p>
+          <p><strong>Date:</strong> ${new Date().toLocaleString('en-US')}</p>
+          <p><strong>Status:</strong> Completed</p>
+        </div>
+      `,
+    });
+  } catch (err) {
+    console.error('Failed to send donation admin notification:', err.message);
+  }
 }
 
 // Create checkout session
@@ -100,6 +238,10 @@ router.post('/webhook', async (req, res) => {
         .single();
 
       if (donation) {
+        // Send receipt email to donor and notification to admin
+        sendDonationReceipt(donation);
+        sendDonationAdminNotification(donation);
+
         // Fetch current stats, increment, and update
         const { data: stats } = await supabase
           .from('donation_stats')
