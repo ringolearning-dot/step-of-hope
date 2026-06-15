@@ -5,9 +5,8 @@ import toast from 'react-hot-toast';
 import api from '../lib/api';
 import useContent from '../lib/useContent';
 import heroShared from '../assets/images/hero-shared.png';
-import { FaGift, FaPalette, FaPeopleRoof, FaHouseMedical, FaPeopleGroup, FaFaceSmileBeam, FaStar } from 'react-icons/fa6';
+import { FaGift, FaPalette, FaPeopleRoof, FaHouseMedical, FaPeopleGroup, FaFaceSmileBeam, FaStar, FaCreditCard } from 'react-icons/fa6';
 import { IconType } from 'react-icons';
-import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -35,11 +34,7 @@ export default function Donate() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const [paypalClientId, setPaypalClientId] = useState('');
-
-  useEffect(() => {
-    api.get('/paypal/client-id').then((res) => setPaypalClientId(res.data.clientId)).catch(() => {});
-  }, []);
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'paypal'>('card');
 
   useEffect(() => {
     if (searchParams.get('success') === 'true') {
@@ -256,61 +251,73 @@ export default function Donate() {
                 />
               </div>
 
-              {/* Submit */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-gold to-gold-light hover:from-gold-light hover:to-gold text-white font-display font-bold text-lg py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-                {loading ? 'Processing...' : `Donate ${finalAmount ? `$${finalAmount}` : ''} ${isMonthly ? '/ month' : ''}`}
-              </button>
-
-              <p className="font-body text-navy/40 text-xs text-center mt-4">
-                Secure payment powered by Stripe. Your information is encrypted and protected.
-              </p>
-
-              {/* Divider */}
-              <div className="flex items-center gap-4 my-6">
-                <div className="flex-1 h-px bg-navy/10" />
-                <span className="font-body text-navy/40 text-xs uppercase tracking-wider">or pay with</span>
-                <div className="flex-1 h-px bg-navy/10" />
+              {/* Payment Method Toggle */}
+              <div className="flex items-center gap-3 mb-6">
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('card')}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl border-2 font-display font-semibold text-sm transition-all duration-300 ${
+                    paymentMethod === 'card'
+                      ? 'border-navy bg-navy text-white shadow-md'
+                      : 'border-navy/10 text-navy/50 hover:border-navy/30'
+                  }`}
+                >
+                  <FaCreditCard className="w-4 h-4" />
+                  Card
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('paypal')}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl border-2 font-display font-semibold text-sm transition-all duration-300 ${
+                    paymentMethod === 'paypal'
+                      ? 'border-[#FFD140] bg-[#FFD140] text-black shadow-md'
+                      : 'border-navy/10 text-navy/50 hover:border-[#FFD140]/50'
+                  }`}
+                >
+                  <img src="https://www.paypalobjects.com/paypal-ui/logos/svg/paypal-mark-color.svg" alt="" className="h-4" />
+                  PayPal
+                </button>
               </div>
 
-              {/* PayPal */}
-              {paypalClientId && (
-                <PayPalScriptProvider options={{ clientId: paypalClientId, currency: 'USD' }}>
-                  <PayPalButtons
-                    style={{ layout: 'vertical', shape: 'rect', label: 'paypal', height: 50 }}
-                    createOrder={async () => {
-                      if (!finalAmount || finalAmount < 1) {
-                        toast.error('Please select or enter a donation amount.');
-                        throw new Error('Invalid amount');
-                      }
-                      if (!name.trim() || !email.trim()) {
-                        toast.error('Please enter your name and email.');
-                        throw new Error('Missing name/email');
-                      }
-                      const res = await api.post('/paypal/donations/create-order', {
-                        amount: finalAmount,
-                        name: name.trim(),
-                        email: email.trim(),
-                        isMonthly,
-                      });
-                      return res.data.orderId;
-                    }}
-                    onApprove={async (data) => {
-                      await api.post('/paypal/donations/capture-order', { orderId: data.orderID });
-                      toast.success('Thank you for your generous donation! Your support brings hope to those who need it most.');
-                      window.location.href = '/donate?success=true';
-                    }}
-                    onError={() => {
-                      toast.error('PayPal payment failed. Please try again.');
-                    }}
-                  />
-                </PayPalScriptProvider>
+              {/* Card Payment (Stripe) */}
+              {paymentMethod === 'card' && (
+                <>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-gold to-gold-light hover:from-gold-light hover:to-gold text-white font-display font-bold text-lg py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    {loading ? 'Processing...' : `Donate ${finalAmount ? `$${finalAmount}` : ''} ${isMonthly ? '/ month' : ''}`}
+                  </button>
+                  <p className="font-body text-navy/40 text-xs text-center mt-4">
+                    Secure payment powered by Stripe. Your information is encrypted and protected.
+                  </p>
+                </>
+              )}
+
+              {/* PayPal Payment */}
+              {paymentMethod === 'paypal' && (
+                <div className="flex flex-col items-center gap-3">
+                  <form action="https://www.paypal.com/ncp/payment/WQ8AGSX736JN4" method="post" target="_blank" className="w-full">
+                    <button
+                      type="submit"
+                      className="w-full flex items-center justify-center gap-2 bg-[#FFD140] hover:bg-[#f0c430] text-black font-bold py-4 rounded-xl text-lg transition-all duration-300 shadow-lg hover:shadow-xl"
+                    >
+                      <img src="https://www.paypalobjects.com/paypal-ui/logos/svg/paypal-mark-color.svg" alt="" className="h-5" />
+                      Donate with PayPal
+                    </button>
+                  </form>
+                  <div className="flex items-center gap-2">
+                    <img src="https://www.paypalobjects.com/images/Debit_Credit_APM.svg" alt="Accepted cards" className="h-5" />
+                  </div>
+                  <p className="font-body text-navy/40 text-xs flex items-center gap-1">
+                    Powered by
+                    <img src="https://www.paypalobjects.com/paypal-ui/logos/svg/paypal-wordmark-color.svg" alt="PayPal" className="h-3.5" />
+                  </p>
+                </div>
               )}
             </motion.form>
           </motion.div>
