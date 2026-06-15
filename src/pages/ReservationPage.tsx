@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import api from '../lib/api';
 import { FaCamera, FaVideo, FaCalendarDays, FaUser, FaCreditCard, FaCheck, FaChevronLeft, FaChevronRight } from 'react-icons/fa6';
+import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 
 type ServiceType = 'photobooth' | '360booth' | 'both';
 
@@ -269,9 +270,11 @@ export default function ReservationPage() {
   const [promoError, setPromoError] = useState('');
   const [promoLoading, setPromoLoading] = useState(false);
   const [prices, setPrices] = useState<Pricing>(DEFAULT_PRICING);
+  const [paypalClientId, setPaypalClientId] = useState('');
 
   useEffect(() => {
     api.get('/reservations/pricing').then((res) => setPrices(res.data)).catch(() => {});
+    api.get('/paypal/client-id').then((res) => setPaypalClientId(res.data.clientId)).catch(() => {});
   }, []);
   const [form, setForm] = useState<FormData>({
     fullName: '',
@@ -1154,21 +1157,50 @@ export default function ReservationPage() {
                 </div>
 
                 {/* PayPal */}
-                <form action="https://www.paypal.com/ncp/payment/WQ8AGSX736JN4" method="post" target="_blank" className="flex flex-col items-center gap-2">
-                  <button
-                    type="submit"
-                    className="w-full flex items-center justify-center gap-2 bg-[#FFD140] hover:bg-[#f0c430] text-black font-bold py-3.5 rounded-xl text-base transition-all duration-300 shadow-sm hover:shadow-md"
-                  >
-                    Pay with PayPal
-                  </button>
-                  <div className="flex items-center gap-2 mt-1">
-                    <img src="https://www.paypalobjects.com/images/Debit_Credit_APM.svg" alt="Accepted cards" className="h-5" />
-                  </div>
-                  <p className="font-body text-navy/40 text-xs flex items-center gap-1">
-                    Powered by
-                    <img src="https://www.paypalobjects.com/paypal-ui/logos/svg/paypal-wordmark-color.svg" alt="PayPal" className="h-3.5" />
-                  </p>
-                </form>
+                {paypalClientId && (
+                  <PayPalScriptProvider options={{ clientId: paypalClientId, currency: 'USD' }}>
+                    <PayPalButtons
+                      style={{ layout: 'vertical', shape: 'rect', label: 'paypal', height: 50 }}
+                      createOrder={async () => {
+                        const finalTotal = promoApplied
+                          ? pricing.total - Math.round(pricing.total * (promoApplied.discount / 100))
+                          : pricing.total;
+                        const res = await api.post('/paypal/reservations/create-order', {
+                          serviceType,
+                          fullName: form.fullName.trim(),
+                          email: form.email.trim(),
+                          phone: form.phone.trim(),
+                          organization: form.organization.trim(),
+                          eventDate: form.eventDate,
+                          startTime: form.startTime,
+                          numHours: form.numHours,
+                          eventType: form.eventType,
+                          eventAddress: form.eventAddress.trim(),
+                          indoorOutdoor: form.indoorOutdoor,
+                          estimatedGuests: parseInt(form.estimatedGuests),
+                          withTent: form.withTent,
+                          customBackdrop: form.customBackdrop,
+                          backdropChoice: form.backdropChoice,
+                          designNotes: form.designNotes.trim(),
+                          parkingInstructions: form.parkingInstructions.trim(),
+                          setupAccessTime: form.setupAccessTime.trim(),
+                          powerAvailability: form.powerAvailability.trim(),
+                          specialRequests: form.specialRequests.trim(),
+                          promoCode: promoApplied?.code || null,
+                          totalAmount: finalTotal,
+                        });
+                        return res.data.orderId;
+                      }}
+                      onApprove={async (data) => {
+                        await api.post('/paypal/reservations/capture-order', { orderId: data.orderID });
+                        setStep(5);
+                      }}
+                      onError={() => {
+                        toast.error('PayPal payment failed. Please try again.');
+                      }}
+                    />
+                  </PayPalScriptProvider>
+                )}
               </div>
             </motion.div>
           )}

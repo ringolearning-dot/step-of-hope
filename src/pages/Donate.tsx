@@ -7,6 +7,7 @@ import useContent from '../lib/useContent';
 import heroShared from '../assets/images/hero-shared.png';
 import { FaGift, FaPalette, FaPeopleRoof, FaHouseMedical, FaPeopleGroup, FaFaceSmileBeam, FaStar } from 'react-icons/fa6';
 import { IconType } from 'react-icons';
+import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 30 },
@@ -34,6 +35,11 @@ export default function Donate() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
+  const [paypalClientId, setPaypalClientId] = useState('');
+
+  useEffect(() => {
+    api.get('/paypal/client-id').then((res) => setPaypalClientId(res.data.clientId)).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (searchParams.get('success') === 'true') {
@@ -274,21 +280,35 @@ export default function Donate() {
               </div>
 
               {/* PayPal */}
-              <form action="https://www.paypal.com/ncp/payment/WQ8AGSX736JN4" method="post" target="_blank" className="flex flex-col items-center gap-2">
-                <button
-                  type="submit"
-                  className="w-full flex items-center justify-center gap-2 bg-[#FFD140] hover:bg-[#f0c430] text-black font-bold py-3.5 rounded-xl text-base transition-all duration-300 shadow-sm hover:shadow-md"
-                >
-                  Pay with PayPal
-                </button>
-                <div className="flex items-center gap-2 mt-1">
-                  <img src="https://www.paypalobjects.com/images/Debit_Credit_APM.svg" alt="Accepted cards" className="h-5" />
-                </div>
-                <p className="font-body text-navy/40 text-xs flex items-center gap-1">
-                  Powered by
-                  <img src="https://www.paypalobjects.com/paypal-ui/logos/svg/paypal-wordmark-color.svg" alt="PayPal" className="h-3.5" />
+              {paypalClientId && finalAmount >= 1 && name.trim() && email.trim() && (
+                <PayPalScriptProvider options={{ clientId: paypalClientId, currency: 'USD' }}>
+                  <PayPalButtons
+                    style={{ layout: 'vertical', shape: 'rect', label: 'paypal', height: 50 }}
+                    createOrder={async () => {
+                      const res = await api.post('/paypal/donations/create-order', {
+                        amount: finalAmount,
+                        name: name.trim(),
+                        email: email.trim(),
+                        isMonthly,
+                      });
+                      return res.data.orderId;
+                    }}
+                    onApprove={async (data) => {
+                      await api.post('/paypal/donations/capture-order', { orderId: data.orderID });
+                      toast.success('Thank you for your generous donation! Your support brings hope to those who need it most.');
+                      window.location.href = '/donate?success=true';
+                    }}
+                    onError={() => {
+                      toast.error('PayPal payment failed. Please try again.');
+                    }}
+                  />
+                </PayPalScriptProvider>
+              )}
+              {paypalClientId && (finalAmount < 1 || !name.trim() || !email.trim()) && (
+                <p className="font-body text-navy/40 text-xs text-center">
+                  Fill in your name, email, and amount above to see PayPal options.
                 </p>
-              </form>
+              )}
             </motion.form>
           </motion.div>
         </div>
