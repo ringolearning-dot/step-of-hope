@@ -518,7 +518,6 @@ router.post('/create-session', async (req, res) => {
     }
 
     const sessionParams = {
-      payment_method_types: ['card'],
       customer_email: email,
       line_items: lineItems,
       mode: 'payment',

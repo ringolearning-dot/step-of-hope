@@ -139,7 +139,6 @@ router.post('/create-session', async (req, res) => {
 
     const stripe = getStripe();
     const sessionParams = {
-      payment_method_types: ['card'],
       customer_email: donorEmail || undefined,
       line_items: [{
         price_data: {
