@@ -9,6 +9,10 @@ const PAYPAL_API = process.env.PAYPAL_MODE === 'sandbox'
   : 'https://api-m.paypal.com';
 
 async function getAccessToken() {
+  if (!process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_CLIENT_SECRET) {
+    throw new Error('PayPal credentials not configured. Set PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET env vars.');
+  }
+
   const auth = Buffer.from(
     `${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`
   ).toString('base64');
@@ -23,7 +27,10 @@ async function getAccessToken() {
   });
 
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error_description || 'PayPal auth failed');
+  if (!res.ok) {
+    console.error('PayPal auth error:', data);
+    throw new Error(data.error_description || data.error || 'PayPal auth failed');
+  }
   return data.access_token;
 }
 
@@ -77,7 +84,7 @@ router.post('/donations/create-order', async (req, res) => {
     res.json({ orderId: order.id });
   } catch (err) {
     console.error('PayPal donation create error:', err.message);
-    res.status(500).json({ error: 'Failed to create PayPal order.' });
+    res.status(500).json({ error: `Failed to create PayPal order: ${err.message}` });
   }
 });
 
@@ -253,7 +260,7 @@ router.post('/reservations/create-order', async (req, res) => {
     res.json({ orderId: order.id });
   } catch (err) {
     console.error('PayPal reservation create error:', err.message);
-    res.status(500).json({ error: 'Failed to create PayPal order.' });
+    res.status(500).json({ error: `Failed to create PayPal order: ${err.message}` });
   }
 });
 
