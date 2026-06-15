@@ -265,6 +265,30 @@ export default function Donate() {
               <p className="font-body text-navy/40 text-xs text-center mt-4">
                 Secure payment powered by Stripe. Your information is encrypted and protected.
               </p>
+
+              {/* Divider */}
+              <div className="flex items-center gap-4 my-6">
+                <div className="flex-1 h-px bg-navy/10" />
+                <span className="font-body text-navy/40 text-xs uppercase tracking-wider">or pay with</span>
+                <div className="flex-1 h-px bg-navy/10" />
+              </div>
+
+              {/* PayPal */}
+              <form action="https://www.paypal.com/ncp/payment/WQ8AGSX736JN4" method="post" target="_blank" className="flex flex-col items-center gap-2">
+                <button
+                  type="submit"
+                  className="w-full flex items-center justify-center gap-2 bg-[#FFD140] hover:bg-[#f0c430] text-black font-bold py-3.5 rounded-xl text-base transition-all duration-300 shadow-sm hover:shadow-md"
+                >
+                  Pay with PayPal
+                </button>
+                <div className="flex items-center gap-2 mt-1">
+                  <img src="https://www.paypalobjects.com/images/Debit_Credit_APM.svg" alt="Accepted cards" className="h-5" />
+                </div>
+                <p className="font-body text-navy/40 text-xs flex items-center gap-1">
+                  Powered by
+                  <img src="https://www.paypalobjects.com/paypal-ui/logos/svg/paypal-wordmark-color.svg" alt="PayPal" className="h-3.5" />
+                </p>
+              </form>
             </motion.form>
           </motion.div>
         </div>
