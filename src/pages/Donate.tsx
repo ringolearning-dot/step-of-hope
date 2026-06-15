@@ -280,11 +280,19 @@ export default function Donate() {
               </div>
 
               {/* PayPal */}
-              {paypalClientId && finalAmount >= 1 && name.trim() && email.trim() && (
+              {paypalClientId && (
                 <PayPalScriptProvider options={{ clientId: paypalClientId, currency: 'USD' }}>
                   <PayPalButtons
                     style={{ layout: 'vertical', shape: 'rect', label: 'paypal', height: 50 }}
                     createOrder={async () => {
+                      if (!finalAmount || finalAmount < 1) {
+                        toast.error('Please select or enter a donation amount.');
+                        throw new Error('Invalid amount');
+                      }
+                      if (!name.trim() || !email.trim()) {
+                        toast.error('Please enter your name and email.');
+                        throw new Error('Missing name/email');
+                      }
                       const res = await api.post('/paypal/donations/create-order', {
                         amount: finalAmount,
                         name: name.trim(),
@@ -303,11 +311,6 @@ export default function Donate() {
                     }}
                   />
                 </PayPalScriptProvider>
-              )}
-              {paypalClientId && (finalAmount < 1 || !name.trim() || !email.trim()) && (
-                <p className="font-body text-navy/40 text-xs text-center">
-                  Fill in your name, email, and amount above to see PayPal options.
-                </p>
               )}
             </motion.form>
           </motion.div>
