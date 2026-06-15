@@ -165,94 +165,8 @@ export default function Donate() {
                 Your contribution is secure and tax-deductible.
               </p>
 
-              {/* Monthly Toggle */}
-              <div className="flex items-center justify-center gap-4 mb-8">
-                <button
-                  type="button"
-                  onClick={() => setIsMonthly(false)}
-                  className={`font-display font-semibold px-6 py-2.5 rounded-lg text-sm transition-all duration-300 ${
-                    !isMonthly
-                      ? 'bg-navy text-white shadow-md'
-                      : 'bg-navy/5 text-navy/50 hover:bg-navy/10'
-                  }`}
-                >
-                  One-Time
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setIsMonthly(true)}
-                  className={`font-display font-semibold px-6 py-2.5 rounded-lg text-sm transition-all duration-300 ${
-                    isMonthly
-                      ? 'bg-navy text-white shadow-md'
-                      : 'bg-navy/5 text-navy/50 hover:bg-navy/10'
-                  }`}
-                >
-                  Monthly
-                </button>
-              </div>
-
-              {/* Amount Selection */}
-              <div className="grid grid-cols-3 gap-3 mb-4">
-                {presetAmounts.map((preset) => (
-                  <button
-                    key={preset}
-                    type="button"
-                    onClick={() => {
-                      setAmount(preset);
-                      setCustomAmount('');
-                    }}
-                    className={`font-display font-bold text-lg py-4 rounded-xl border-2 transition-all duration-300 ${
-                      amount === preset
-                        ? 'border-gold bg-gold/10 text-gold shadow-md'
-                        : 'border-navy/10 text-navy/60 hover:border-gold/40 hover:bg-gold/5'
-                    }`}
-                  >
-                    ${preset}
-                  </button>
-                ))}
-              </div>
-
-              {/* Custom Amount */}
-              <div className="relative mb-8">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 font-display font-bold text-navy/40 text-lg">
-                  $
-                </span>
-                <input
-                  type="number"
-                  min="1"
-                  placeholder="Custom amount"
-                  value={customAmount}
-                  onFocus={() => setAmount(null)}
-                  onChange={(e) => {
-                    setCustomAmount(e.target.value);
-                    setAmount(null);
-                  }}
-                  className="w-full pl-9 pr-4 py-4 rounded-xl border-2 border-navy/10 focus:border-hope focus:ring-2 focus:ring-hope/20 outline-none font-body text-navy text-lg transition-all duration-300 bg-transparent"
-                />
-              </div>
-
-              {/* Name & Email */}
-              <div className="space-y-4 mb-8">
-                <input
-                  type="text"
-                  placeholder="Full Name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
-                  className="w-full px-4 py-4 rounded-xl border-2 border-navy/10 focus:border-hope focus:ring-2 focus:ring-hope/20 outline-none font-body text-navy transition-all duration-300 bg-transparent"
-                />
-                <input
-                  type="email"
-                  placeholder="Email Address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full px-4 py-4 rounded-xl border-2 border-navy/10 focus:border-hope focus:ring-2 focus:ring-hope/20 outline-none font-body text-navy transition-all duration-300 bg-transparent"
-                />
-              </div>
-
               {/* Payment Method Toggle */}
-              <div className="flex items-center gap-3 mb-6">
+              <div className="flex items-center gap-3 mb-8">
                 <button
                   type="button"
                   onClick={() => setPaymentMethod('card')}
@@ -282,6 +196,92 @@ export default function Donate() {
               {/* Card Payment (Stripe) */}
               {paymentMethod === 'card' && (
                 <>
+                  {/* Monthly Toggle */}
+                  <div className="flex items-center justify-center gap-4 mb-8">
+                    <button
+                      type="button"
+                      onClick={() => setIsMonthly(false)}
+                      className={`font-display font-semibold px-6 py-2.5 rounded-lg text-sm transition-all duration-300 ${
+                        !isMonthly
+                          ? 'bg-navy text-white shadow-md'
+                          : 'bg-navy/5 text-navy/50 hover:bg-navy/10'
+                      }`}
+                    >
+                      One-Time
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsMonthly(true)}
+                      className={`font-display font-semibold px-6 py-2.5 rounded-lg text-sm transition-all duration-300 ${
+                        isMonthly
+                          ? 'bg-navy text-white shadow-md'
+                          : 'bg-navy/5 text-navy/50 hover:bg-navy/10'
+                      }`}
+                    >
+                      Monthly
+                    </button>
+                  </div>
+
+                  {/* Amount Selection */}
+                  <div className="grid grid-cols-3 gap-3 mb-4">
+                    {presetAmounts.map((preset) => (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => {
+                          setAmount(preset);
+                          setCustomAmount('');
+                        }}
+                        className={`font-display font-bold text-lg py-4 rounded-xl border-2 transition-all duration-300 ${
+                          amount === preset
+                            ? 'border-gold bg-gold/10 text-gold shadow-md'
+                            : 'border-navy/10 text-navy/60 hover:border-gold/40 hover:bg-gold/5'
+                        }`}
+                      >
+                        ${preset}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Custom Amount */}
+                  <div className="relative mb-8">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 font-display font-bold text-navy/40 text-lg">
+                      $
+                    </span>
+                    <input
+                      type="number"
+                      min="1"
+                      placeholder="Custom amount"
+                      value={customAmount}
+                      onFocus={() => setAmount(null)}
+                      onChange={(e) => {
+                        setCustomAmount(e.target.value);
+                        setAmount(null);
+                      }}
+                      className="w-full pl-9 pr-4 py-4 rounded-xl border-2 border-navy/10 focus:border-hope focus:ring-2 focus:ring-hope/20 outline-none font-body text-navy text-lg transition-all duration-300 bg-transparent"
+                    />
+                  </div>
+
+                  {/* Name & Email */}
+                  <div className="space-y-4 mb-8">
+                    <input
+                      type="text"
+                      placeholder="Full Name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                      className="w-full px-4 py-4 rounded-xl border-2 border-navy/10 focus:border-hope focus:ring-2 focus:ring-hope/20 outline-none font-body text-navy transition-all duration-300 bg-transparent"
+                    />
+                    <input
+                      type="email"
+                      placeholder="Email Address"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      className="w-full px-4 py-4 rounded-xl border-2 border-navy/10 focus:border-hope focus:ring-2 focus:ring-hope/20 outline-none font-body text-navy transition-all duration-300 bg-transparent"
+                    />
+                  </div>
+
                   <button
                     type="submit"
                     disabled={loading}
