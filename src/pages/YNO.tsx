@@ -179,7 +179,9 @@ export default function YNO() {
             </p>
             <div className="flex flex-wrap gap-4 pt-2">
               <a
-                href="#"
+                href="https://apps.apple.com/app/yno"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 bg-hope text-white font-semibold px-8 py-3.5 rounded-full hover:bg-hope-light transition-all duration-200 hover:shadow-[0_0_24px_rgba(91,141,190,0.5)]"
               >
                 Download YNO
@@ -273,7 +275,9 @@ export default function YNO() {
               </p>
               <div className="flex flex-wrap justify-center gap-4">
                 <a
-                  href="#"
+                  href="https://apps.apple.com/app/yno"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 bg-hope text-white font-semibold px-8 py-3.5 rounded-full hover:bg-hope-light transition-all duration-200 hover:shadow-[0_0_24px_rgba(91,141,190,0.5)]"
                 >
                   Download YNO
