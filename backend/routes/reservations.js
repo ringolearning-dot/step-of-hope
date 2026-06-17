@@ -95,6 +95,13 @@ function calculateTotalWithPricing(serviceType, options, p) {
   return base + extras;
 }
 
+// Calculate processing fee: Stripe 2.9% + $0.30
+function calcProcessingFee(amount) {
+  if (amount <= 0) return 0;
+  const total = (amount + 0.30) / (1 - 0.029);
+  return Math.round((total - amount) * 100) / 100;
+}
+
 // Build line items for Stripe
 function buildLineItems(serviceType, options, p) {
   const items = [];
@@ -484,7 +491,7 @@ router.post('/create-session', async (req, res) => {
     }
 
     const p = await getPricing();
-    let total = calculateTotalWithPricing(serviceType, { numHours, withTent, customBackdrop }, p);
+    let subtotal = calculateTotalWithPricing(serviceType, { numHours, withTent, customBackdrop }, p);
     let discount = 0;
     let appliedPromo = null;
 
@@ -497,21 +504,37 @@ router.post('/create-session', async (req, res) => {
         .single();
 
       if (promo && !promo.used && (!promo.expires_at || new Date(promo.expires_at) >= new Date())) {
-        discount = Math.round(total * (promo.discount / 100));
-        total = total - discount;
+        discount = Math.round(subtotal * (promo.discount / 100));
+        subtotal = subtotal - discount;
         appliedPromo = promo;
       }
     }
 
+    const fee = calcProcessingFee(subtotal);
+    const total = +(subtotal + fee).toFixed(2);
+
     const lineItems = buildLineItems(serviceType, { numHours, withTent, customBackdrop }, p);
+
+    // Add processing fee as a separate line item (not subject to coupon discount)
+    if (fee > 0) {
+      lineItems.push({
+        price_data: {
+          currency: 'usd',
+          product_data: { name: 'Processing Fee', description: 'Card processing fee' },
+          unit_amount: Math.round(fee * 100),
+        },
+        quantity: 1,
+      });
+    }
 
     const stripe = getStripe();
 
-    // Create a Stripe coupon if promo code is applied
+    // Create a Stripe coupon if promo code is applied — apply only to service items (amount_off instead of percent)
     let stripeCoupon = null;
     if (appliedPromo) {
       stripeCoupon = await stripe.coupons.create({
-        percent_off: appliedPromo.discount,
+        amount_off: discount * 100,
+        currency: 'usd',
         duration: 'once',
         name: `Promo ${appliedPromo.code} (${appliedPromo.discount}% off)`,
       });

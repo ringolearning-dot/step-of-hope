@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import api from '../lib/api';
 import useContent from '../lib/useContent';
 import heroShared from '../assets/images/hero-shared.png';
+import zelleQr from '../assets/images/zelle-qr.png';
 import { FaGift, FaPalette, FaPeopleRoof, FaHouseMedical, FaPeopleGroup, FaFaceSmileBeam, FaStar, FaCreditCard } from 'react-icons/fa6';
 import { IconType } from 'react-icons';
 
@@ -14,6 +15,13 @@ const fadeUp = {
 };
 
 const presetAmounts = [25, 50, 100];
+
+function calcProcessingFee(amount: number): number {
+  // Stripe: 2.9% + $0.30 — solve for total: total = (amount + 0.30) / (1 - 0.029)
+  if (amount <= 0) return 0;
+  const total = (amount + 0.30) / (1 - 0.029);
+  return Math.round((total - amount) * 100) / 100;
+}
 
 const impactItems: { icon: IconType; label: string; color: string }[] = [
   { icon: FaGift, label: 'Gifts and toys', color: 'text-red-500 bg-red-50' },
@@ -34,7 +42,8 @@ export default function Donate() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'paypal'>('card');
+  const [coverFees, setCoverFees] = useState(true);
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'paypal' | 'zelle'>('card');
 
   useEffect(() => {
     if (searchParams.get('success') === 'true') {
@@ -45,11 +54,13 @@ export default function Donate() {
     }
   }, [searchParams]);
 
-  const finalAmount = amount ?? (customAmount ? parseFloat(customAmount) : 0);
+  const baseAmount = amount ?? (customAmount ? parseFloat(customAmount) : 0);
+  const fee = calcProcessingFee(baseAmount);
+  const finalAmount = coverFees ? +(baseAmount + fee).toFixed(2) : baseAmount;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!finalAmount || finalAmount < 1) {
+    if (!baseAmount || baseAmount < 1) {
       toast.error('Please select or enter a donation amount.');
       return;
     }
@@ -166,7 +177,7 @@ export default function Donate() {
               </p>
 
               {/* Payment Method Toggle */}
-              <div className="flex items-center gap-3 mb-8">
+              <div className="flex items-center gap-2 mb-8">
                 <button
                   type="button"
                   onClick={() => setPaymentMethod('card')}
@@ -190,6 +201,21 @@ export default function Donate() {
                 >
                   <img src="https://www.paypalobjects.com/paypal-ui/logos/svg/paypal-mark-color.svg" alt="" className="h-4" />
                   PayPal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod('zelle')}
+                  className={`flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl border-2 font-display font-semibold text-sm transition-all duration-300 ${
+                    paymentMethod === 'zelle'
+                      ? 'border-[#6D1ED4] bg-[#6D1ED4] text-white shadow-md'
+                      : 'border-navy/10 text-navy/50 hover:border-[#6D1ED4]/50'
+                  }`}
+                >
+                  <svg viewBox="0 0 36 36" className="h-4 w-4" fill="none">
+                    <path d="M23.4 6H12.6L6 18l6.6 12h10.8L30 18 23.4 6Z" fill={paymentMethod === 'zelle' ? '#fff' : '#6D1ED4'} />
+                    <path d="M20.1 13.2h-5.7l-2.1 3.6 6.3 6.6h-4.2l2.1 3.6h5.7l2.1-3.6-6.3-6.6h4.2l-2.1-3.6Z" fill={paymentMethod === 'zelle' ? '#6D1ED4' : '#fff'} />
+                  </svg>
+                  Zelle
                 </button>
               </div>
 
@@ -282,6 +308,39 @@ export default function Donate() {
                     />
                   </div>
 
+                  {/* Cover Fees Checkbox */}
+                  <label className="flex items-start gap-3 mb-5 cursor-pointer group">
+                    <input
+                      type="checkbox"
+                      checked={coverFees}
+                      onChange={(e) => setCoverFees(e.target.checked)}
+                      className="w-5 h-5 mt-0.5 rounded border-navy/20 text-navy focus:ring-hope accent-navy flex-shrink-0"
+                    />
+                    <span className="font-body text-sm text-navy/70 leading-snug group-hover:text-navy transition-colors">
+                      Cover processing fees so <strong>100%</strong> of my donation supports Step of Hope Foundation.
+                    </span>
+                  </label>
+
+                  {/* Fee Breakdown */}
+                  {baseAmount >= 1 && (
+                    <div className="bg-navy/[0.03] rounded-xl p-4 mb-6 space-y-1.5 font-body text-sm">
+                      <div className="flex justify-between text-navy/60">
+                        <span>Donation</span>
+                        <span>${baseAmount.toFixed(2)}</span>
+                      </div>
+                      {coverFees && (
+                        <div className="flex justify-between text-navy/60">
+                          <span>Processing fee</span>
+                          <span>${fee.toFixed(2)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between font-display font-bold text-navy pt-1.5 border-t border-navy/10">
+                        <span>Total charged</span>
+                        <span>${finalAmount.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  )}
+
                   <button
                     type="submit"
                     disabled={loading}
@@ -290,7 +349,7 @@ export default function Donate() {
                     <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
-                    {loading ? 'Processing...' : `Donate ${finalAmount ? `$${finalAmount}` : ''} ${isMonthly ? '/ month' : ''}`}
+                    {loading ? 'Processing...' : `Donate $${finalAmount.toFixed(2)} ${isMonthly ? '/ month' : ''}`}
                   </button>
                   <p className="font-body text-navy/40 text-xs text-center mt-4">
                     Secure payment powered by Stripe. Your information is encrypted and protected.
@@ -317,6 +376,33 @@ export default function Donate() {
                     Powered by
                     <img src="https://www.paypalobjects.com/paypal-ui/logos/svg/paypal-wordmark-color.svg" alt="PayPal" className="h-3.5" />
                   </p>
+                </div>
+              )}
+
+              {/* Zelle Payment */}
+              {paymentMethod === 'zelle' && (
+                <div className="flex flex-col items-center gap-4">
+                  <p className="font-body text-navy/70 text-sm text-center leading-relaxed">
+                    Scan the QR code below with your banking app to send your donation via Zelle.
+                  </p>
+                  <div className="bg-white border-2 border-navy/10 rounded-2xl p-4 shadow-sm">
+                    <img
+                      src={zelleQr}
+                      alt="Zelle QR Code"
+                      className="w-56 h-56 object-contain mx-auto"
+                    />
+                  </div>
+                  <div className="text-center">
+                    <p className="font-body text-navy/50 text-xs mb-1">Or send directly to:</p>
+                    <p className="font-display font-bold text-navy text-base select-all">
+                      stepofhopefoundation@gmail.com
+                    </p>
+                  </div>
+                  <div className="bg-navy/[0.03] rounded-xl p-4 w-full">
+                    <p className="font-body text-navy/60 text-xs text-center leading-relaxed">
+                      After sending your Zelle payment, please include your name and "Donation" in the memo so we can properly acknowledge your generous contribution.
+                    </p>
+                  </div>
                 </div>
               )}
             </motion.form>

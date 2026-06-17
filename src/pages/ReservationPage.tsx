@@ -233,6 +233,13 @@ const DEFAULT_PRICING: Pricing = {
   both_backdrop: 200,
 };
 
+function calcServiceFee(amount: number): number {
+  // Stripe: 2.9% + $0.30 — solve for total so net = amount
+  if (amount <= 0) return 0;
+  const total = (amount + 0.30) / (1 - 0.029);
+  return Math.round((total - amount) * 100) / 100;
+}
+
 function calculateTotal(serviceType: ServiceType, form: FormData, p: Pricing) {
   let base = 0;
   let extras = 0;
@@ -253,7 +260,9 @@ function calculateTotal(serviceType: ServiceType, form: FormData, p: Pricing) {
     extras += extraHours * p['360booth_extra_hour'];
   }
 
-  return { base, extras, total: base + extras };
+  const subtotal = base + extras;
+  const fee = calcServiceFee(subtotal);
+  return { base, extras, subtotal, fee, total: +(subtotal + fee).toFixed(2) };
 }
 
 export default function ReservationPage() {
@@ -882,9 +891,13 @@ export default function ReservationPage() {
                           <span>$200</span>
                         </div>
                       )}
+                      <div className="flex justify-between text-white/60">
+                        <span>Processing Fee</span>
+                        <span>${pricing.fee.toFixed(2)}</span>
+                      </div>
                       <div className="flex justify-between pt-3 border-t border-white/20 text-white font-display font-bold text-xl">
                         <span>Total</span>
-                        <span>${pricing.total}</span>
+                        <span>${pricing.total.toFixed(2)}</span>
                       </div>
                     </div>
                   </div>
@@ -1064,12 +1077,20 @@ export default function ReservationPage() {
                       {promoApplied && (
                         <div className="flex justify-between text-emerald-600 mb-1">
                           <span>Promo ({promoApplied.code}) -{promoApplied.discount}%</span>
-                          <span>-${Math.round(pricing.total * (promoApplied.discount / 100))}</span>
+                          <span>-${Math.round(pricing.subtotal * (promoApplied.discount / 100))}</span>
                         </div>
                       )}
+                      <div className="flex justify-between text-navy/60 mb-1">
+                        <span>Processing Fee</span>
+                        <span>${(promoApplied ? calcServiceFee(pricing.subtotal - Math.round(pricing.subtotal * (promoApplied.discount / 100))) : pricing.fee).toFixed(2)}</span>
+                      </div>
                       <div className="flex justify-between font-display font-bold text-navy text-xl pt-2 border-t border-navy/10">
                         <span>Total</span>
-                        <span>${promoApplied ? pricing.total - Math.round(pricing.total * (promoApplied.discount / 100)) : pricing.total}</span>
+                        <span>${(() => {
+                          const sub = promoApplied ? pricing.subtotal - Math.round(pricing.subtotal * (promoApplied.discount / 100)) : pricing.subtotal;
+                          const f = calcServiceFee(sub);
+                          return (sub + f).toFixed(2);
+                        })()}</span>
                       </div>
                     </div>
                   </div>
@@ -1139,7 +1160,10 @@ export default function ReservationPage() {
                   className="w-full flex items-center justify-center gap-3 bg-gradient-to-r from-gold to-gold-light hover:from-gold-light hover:to-gold text-white font-display font-bold text-lg py-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <FaCreditCard className="w-5 h-5" />
-                  {loading ? 'Processing...' : `Pay $${promoApplied ? pricing.total - Math.round(pricing.total * (promoApplied.discount / 100)) : pricing.total} & Reserve`}
+                  {loading ? 'Processing...' : `Pay $${(() => {
+                    const sub = promoApplied ? pricing.subtotal - Math.round(pricing.subtotal * (promoApplied.discount / 100)) : pricing.subtotal;
+                    return (sub + calcServiceFee(sub)).toFixed(2);
+                  })()} & Reserve`}
                 </button>
 
                 <p className="font-body text-navy/40 text-xs text-center mt-4">
