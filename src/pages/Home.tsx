@@ -9,19 +9,12 @@ import {
   HiGift,
   HiCake,
   HiStar,
-  HiUsers,
   HiCamera,
   HiCalendarDays,
-  HiAcademicCap,
   HiHome,
-  HiTrophy,
-  HiBanknotes,
-  HiHandRaised,
   HiMegaphone,
-  HiMusicalNote,
   HiSun,
   HiShieldCheck,
-  HiFire,
 } from 'react-icons/hi2';
 import api, { getImageUrl } from '../lib/api';
 import useContent from '../lib/useContent';
@@ -141,109 +134,62 @@ const impactCards = [
   },
 ];
 
-const pillars = [
+const programs = [
   {
-    emoji: '',
-    title: 'Creating Smiles',
+    icon: HiHeart,
+    title: 'Hospital Visits',
+    desc: 'Bringing smiles, gifts, games, and companionship to children during hospital stays.',
     color: 'from-hope/10 to-hope-light/5',
     accent: 'text-hope',
     border: 'border-hope/20',
-    tagline:
-      'We bring light to children facing serious illnesses through hospital visits, surprise gifts, and moments of pure joy.',
-    programs: [
-      {
-        icon: HiHeart,
-        title: 'Hospital Visits & Smile Missions',
-        desc: 'We visit children in hospitals and treatment centers to bring joy, encouragement, and hope through gifts, activities, games, and personal interactions.',
-      },
-      {
-        icon: HiGift,
-        title: 'Hope Packages & Gifts',
-        desc: 'Care packages filled with toys, books, crafts, blankets, and comfort items for children undergoing treatment or long hospital stays.',
-      },
-      {
-        icon: HiCamera,
-        title: 'A Smile for a Smile',
-        desc: 'Children receive a free photo booth session and keepsake photos during hospital visits and events.',
-      },
-      {
-        icon: HiAcademicCap,
-        title: 'Back-to-School Smiles',
-        desc: 'Backpacks, school supplies, and encouragement for children returning to school after treatment.',
-      },
-    ],
   },
   {
-    emoji: '',
-    title: 'Creating Memories',
+    icon: HiCake,
+    title: 'Dream Birthdays',
+    desc: 'Creating unforgettable birthday celebrations with decorations, entertainment, photobooths, cakes, and special surprises.',
     color: 'from-gold/10 to-gold-light/5',
     accent: 'text-gold',
     border: 'border-gold/20',
-    tagline:
-      'Every child deserves magical moments. We create unforgettable celebrations, outings, and experiences for children and families.',
-    programs: [
-      {
-        icon: HiCake,
-        title: 'Dream Birthday Program',
-        desc: 'Unforgettable birthday celebrations with decorations, entertainment, animators, photography, cakes, personalized gifts, and themed celebrations based on each child\u2019s dreams.',
-      },
-      {
-        icon: HiCalendarDays,
-        title: 'Holiday & Seasonal Celebrations',
-        desc: 'Year-round events including Christmas, Easter egg hunts, Halloween costume events, Thanksgiving gatherings, Welcome Summer parties, and more.',
-      },
-      {
-        icon: HiSun,
-        title: 'Family Fun Days',
-        desc: 'Uplifting activities for the whole family \u2014 nature walks, picnics, movie nights, arts & crafts, zoo visits, and community outings.',
-      },
-      {
-        icon: HiStar,
-        title: 'Wishes Come True',
-        desc: 'Small wish-granting program where children can request something special \u2014 meeting a firefighter, visiting a police station, going to a baseball game, or having a superhero-themed day.',
-      },
-    ],
   },
   {
-    emoji: '',
-    title: 'Creating Hope',
+    icon: HiCalendarDays,
+    title: 'Seasonal Events',
+    desc: 'Christmas parties, Easter egg hunts, Welcome Summer, Welcome Fall, Halloween, Fourth of July, and other community celebrations.',
+    color: 'from-hope/10 to-hope-light/5',
+    accent: 'text-hope',
+    border: 'border-hope/20',
+  },
+  {
+    icon: HiGift,
+    title: 'Hope Packages',
+    desc: 'Comfort kits, toys, books, blankets, and care packages for children and families.',
+    color: 'from-gold/10 to-gold-light/5',
+    accent: 'text-gold',
+    border: 'border-gold/20',
+  },
+  {
+    icon: HiHome,
+    title: 'Family Support',
+    desc: 'Supporting parents and siblings through difficult medical journeys.',
     color: 'from-navy/10 to-navy/5',
     accent: 'text-navy',
     border: 'border-navy/20',
-    tagline:
-      'We stand alongside families during their hardest moments \u2014 providing financial assistance, building community, and fundraising for the future.',
-    programs: [
-      {
-        icon: HiBanknotes,
-        title: 'Financial Assistance',
-        desc: 'Helping families facing financial hardships with transportation expenses, medical-related needs, essential support services, and emergency assistance.',
-      },
-      {
-        icon: HiUsers,
-        title: 'Serena\u2019s Support Circle',
-        desc: 'A support program connecting families facing similar challenges, allowing them to share experiences, resources, and encouragement.',
-      },
-      {
-        icon: HiMegaphone,
-        title: 'Community Events & Fundraisers',
-        desc: 'Community events that raise awareness and funds so we can continue supporting children and families. Every dollar brings more smiles and hope.',
-      },
-      {
-        icon: HiHandRaised,
-        title: 'Hope Heroes',
-        desc: 'Volunteer program where community members can sponsor a child, donate gifts, or participate in events.',
-      },
-      {
-        icon: HiGift,
-        title: 'Holiday Toy Drive',
-        desc: 'Annual toy collection and distribution for children spending holidays in hospitals or recovering at home.',
-      },
-      {
-        icon: HiFire,
-        title: 'Longest Walk for Hope',
-        desc: 'Awareness and fundraising walks that bring communities together while supporting children battling serious illnesses.',
-      },
-    ],
+  },
+  {
+    icon: HiSun,
+    title: 'Community Adventures',
+    desc: 'Small hikes, walks, zoo trips, aquarium visits, and family outings that create lasting memories.',
+    color: 'from-hope/10 to-hope-light/5',
+    accent: 'text-hope',
+    border: 'border-hope/20',
+  },
+  {
+    icon: HiStar,
+    title: 'Emergency Smiles Program',
+    desc: 'Helping fulfill special wishes and creating meaningful moments for children facing serious illnesses.',
+    color: 'from-gold/10 to-gold-light/5',
+    accent: 'text-gold',
+    border: 'border-gold/20',
   },
 ];
 
@@ -309,6 +255,20 @@ export default function Home() {
               Read Serena's Story
             </Link>
           </motion.div>
+        </div>
+      </section>
+
+      {/* ============================================================ */}
+      {/*  SLOGAN                                                       */}
+      {/* ============================================================ */}
+      <section className="bg-navy py-6">
+        <div className="text-center px-6">
+          <p className="font-display text-xl sm:text-2xl font-bold text-white tracking-wide">
+            Never Lose Hope. Keep On Fighting.
+          </p>
+          <p className="font-body text-white/60 text-sm mt-1">
+            Every Child Deserves a Reason to Smile.
+          </p>
         </div>
       </section>
 
@@ -383,7 +343,7 @@ export default function Home() {
       </section>
 
       {/* ============================================================ */}
-      {/*  4. WHAT WE DO — THREE PILLARS                               */}
+      {/*  4. WHAT WE DO                                                */}
       {/* ============================================================ */}
       <section className="py-20 md:py-28 bg-white">
         <AnimatedSection className="max-w-6xl mx-auto px-6">
@@ -397,46 +357,154 @@ export default function Home() {
           </motion.div>
           <motion.p
             variants={fadeUp}
-            className="font-body text-navy/60 text-lg text-center max-w-3xl mx-auto mb-16 leading-relaxed"
+            className="font-body text-navy/60 text-lg text-center max-w-4xl mx-auto mb-16 leading-relaxed"
           >
-            Everything we do is built around three promises to the children and
-            families we serve — to create smiles, memories, and lasting hope.
+            Through hospital visits, dream birthdays, seasonal events, hope packages, family support, and community activities, Step of Hope brings smiles, comfort, and hope to children facing difficult medical journeys.
           </motion.p>
 
-          <div className="space-y-16">
-            {pillars.map((pillar) => (
-              <motion.div key={pillar.title} variants={fadeUp}>
-                {/* Pillar header */}
-                <div className="flex items-center gap-4 mb-3">
-                  <h3
-                    className={`font-display text-2xl sm:text-3xl font-bold ${pillar.accent}`}
-                  >
-                    {pillar.title}
-                  </h3>
-                </div>
-                <p className="font-body text-navy/60 leading-relaxed mb-8 max-w-3xl">
-                  {pillar.tagline}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {programs.map((program) => (
+              <motion.div
+                key={program.title}
+                variants={fadeUp}
+                className={`border ${program.border} rounded-2xl p-6 bg-gradient-to-br ${program.color} hover:shadow-lg transition-shadow group`}
+              >
+                <program.icon
+                  className={`w-9 h-9 ${program.accent} mb-3 group-hover:scale-110 transition-transform`}
+                />
+                <h4 className="font-display text-lg font-bold text-navy mb-2">
+                  {program.title}
+                </h4>
+                <p className="font-body text-navy/60 leading-relaxed text-sm">
+                  {program.desc}
                 </p>
+              </motion.div>
+            ))}
+          </div>
+        </AnimatedSection>
+      </section>
 
-                {/* Program cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {pillar.programs.map((program) => (
-                    <div
-                      key={program.title}
-                      className={`border ${pillar.border} rounded-2xl p-6 bg-gradient-to-br ${pillar.color} hover:shadow-lg transition-shadow group`}
-                    >
-                      <program.icon
-                        className={`w-9 h-9 ${pillar.accent} mb-3 group-hover:scale-110 transition-transform`}
-                      />
-                      <h4 className="font-display text-lg font-bold text-navy mb-2">
-                        {program.title}
-                      </h4>
-                      <p className="font-body text-navy/60 leading-relaxed text-sm">
-                        {program.desc}
-                      </p>
-                    </div>
-                  ))}
-                </div>
+      {/* ============================================================ */}
+      {/*  IMPACT COUNTER                                               */}
+      {/* ============================================================ */}
+      <section className="bg-bg-warm py-20 md:py-28">
+        <AnimatedSection className="max-w-5xl mx-auto px-6">
+          <motion.div variants={fadeUp} className="text-center mb-12">
+            <span className="font-body text-hope font-semibold tracking-wider uppercase text-sm">
+              Our Impact
+            </span>
+            <h2 className="font-display text-3xl sm:text-4xl font-bold text-navy mt-2">
+              Making a Difference
+            </h2>
+          </motion.div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {[
+              { label: 'Children Supported', value: '50+' },
+              { label: 'Hospital Visits', value: '30+' },
+              { label: 'Birthdays Celebrated', value: '15+' },
+              { label: 'Smiles Created', value: '500+' },
+            ].map((stat) => (
+              <motion.div
+                key={stat.label}
+                variants={fadeUp}
+                className="text-center"
+              >
+                <p className="font-display text-4xl sm:text-5xl font-bold text-hope mb-2">
+                  {stat.value}
+                </p>
+                <p className="font-body text-navy/60 text-sm">
+                  {stat.label}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+        </AnimatedSection>
+      </section>
+
+      {/* ============================================================ */}
+      {/*  VOLUNTEER IMPACT                                             */}
+      {/* ============================================================ */}
+      <section className="bg-white py-20 md:py-28">
+        <AnimatedSection className="max-w-6xl mx-auto px-6">
+          <motion.div variants={fadeUp} className="text-center mb-12">
+            <span className="font-body text-hope font-semibold tracking-wider uppercase text-sm">
+              Get Involved
+            </span>
+            <h2 className="font-display text-3xl sm:text-4xl font-bold text-navy mt-2 mb-4">
+              Volunteer With Us
+            </h2>
+            <p className="font-body text-navy/60 text-lg max-w-2xl mx-auto leading-relaxed">
+              There are many ways to make a difference. Find a role that fits your skills and passion.
+            </p>
+          </motion.div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              { icon: HiHeart, title: 'Hospital Visitor', desc: 'Visit children in hospitals to bring joy, companionship, and hope during their treatment.' },
+              { icon: HiCalendarDays, title: 'Event Volunteer', desc: 'Help organize and run seasonal events, community celebrations, and fundraisers.' },
+              { icon: HiCake, title: 'Birthday Team', desc: 'Help create dream birthday celebrations for children facing illness.' },
+              { icon: HiCamera, title: 'Photographer / Videographer', desc: 'Capture special moments at events, hospital visits, and celebrations.' },
+              { icon: HiMegaphone, title: 'Fundraiser', desc: 'Help raise funds and awareness for Step of Hope programs and missions.' },
+              { icon: HiShieldCheck, title: 'Corporate Sponsor', desc: 'Partner with Step of Hope to create lasting impact through corporate giving.' },
+            ].map((role) => (
+              <motion.div
+                key={role.title}
+                variants={fadeUp}
+                className="bg-bg-warm rounded-2xl p-6 hover:shadow-lg transition-shadow group"
+              >
+                <role.icon className="w-9 h-9 text-hope mb-3 group-hover:scale-110 transition-transform" />
+                <h4 className="font-display text-lg font-bold text-navy mb-2">{role.title}</h4>
+                <p className="font-body text-navy/60 leading-relaxed text-sm">{role.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+          <motion.div variants={fadeUp} className="text-center mt-10">
+            <Link
+              to="/volunteer"
+              className="inline-block bg-hope hover:bg-hope-light text-white font-body font-semibold px-8 py-3.5 rounded-full text-lg transition-colors shadow-lg hover:shadow-xl"
+            >
+              Apply to Volunteer
+            </Link>
+          </motion.div>
+        </AnimatedSection>
+      </section>
+
+      {/* ============================================================ */}
+      {/*  SPONSOR A PROGRAM                                            */}
+      {/* ============================================================ */}
+      <section className="bg-bg-warm py-20 md:py-28">
+        <AnimatedSection className="max-w-5xl mx-auto px-6">
+          <motion.div variants={fadeUp} className="text-center mb-12">
+            <span className="font-body text-gold font-semibold tracking-wider uppercase text-sm">
+              Sponsorship Opportunities
+            </span>
+            <h2 className="font-display text-3xl sm:text-4xl font-bold text-navy mt-2 mb-4">
+              Sponsor a Program
+            </h2>
+            <p className="font-body text-navy/60 text-lg max-w-2xl mx-auto leading-relaxed">
+              Your sponsorship directly funds the programs that bring hope and happiness to children and families.
+            </p>
+          </motion.div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { title: 'Hope Package', amount: '$100', desc: 'Sponsor a comfort kit filled with toys, books, and blankets for a child.' },
+              { title: 'Hospital Visit', amount: '$250', desc: 'Fund a complete hospital visit with gifts, games, and activities.' },
+              { title: 'Dream Birthday', amount: '$500', desc: 'Give a child an unforgettable birthday celebration.' },
+              { title: 'Seasonal Event', amount: 'Custom', desc: 'Sponsor a community event like Christmas parties or Easter egg hunts.' },
+            ].map((tier) => (
+              <motion.div
+                key={tier.title}
+                variants={fadeUp}
+                className="bg-white rounded-2xl border border-navy/10 p-6 text-center hover:shadow-xl transition-shadow group"
+              >
+                <p className="font-display text-3xl font-bold text-gold mb-2">{tier.amount}</p>
+                <h4 className="font-display text-lg font-bold text-navy mb-2">{tier.title}</h4>
+                <p className="font-body text-navy/60 leading-relaxed text-sm mb-4">{tier.desc}</p>
+                <Link
+                  to="/donate"
+                  className="inline-block bg-navy hover:bg-navy-soft text-white font-body font-semibold px-6 py-2.5 rounded-full text-sm transition-colors"
+                >
+                  Sponsor Now
+                </Link>
               </motion.div>
             ))}
           </div>
