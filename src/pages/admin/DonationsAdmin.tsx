@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../../lib/api';
-import { HiCurrencyDollar, HiCheckCircle, HiClock, HiArrowDownTray, HiArrowPath } from 'react-icons/hi2';
+import { HiCurrencyDollar, HiCheckCircle, HiClock, HiArrowDownTray, HiArrowPath, HiPlus, HiXMark } from 'react-icons/hi2';
 
 interface Donation {
   id: number;
@@ -40,6 +40,9 @@ export default function DonationsAdmin() {
   const [page, setPage] = useState(1);
   const [summary, setSummary] = useState({ total: 0, completed: 0, pending: 0, totalNet: 0, totalFees: 0 });
   const [syncing, setSyncing] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [manualForm, setManualForm] = useState({ donorName: '', donorEmail: '', amount: '', paymentMethod: 'check', date: '', notes: '' });
+  const [addingManual, setAddingManual] = useState(false);
 
   useEffect(() => {
     const fetchDonations = async () => {
@@ -113,6 +116,24 @@ export default function DonationsAdmin() {
     }
   };
 
+  const handleAddManual = async () => {
+    if (!manualForm.donorName || !manualForm.amount) {
+      alert('Donor name and amount are required.');
+      return;
+    }
+    setAddingManual(true);
+    try {
+      await api.post('/donations/admin/manual', manualForm);
+      setShowAddModal(false);
+      setManualForm({ donorName: '', donorEmail: '', amount: '', paymentMethod: 'check', date: '', notes: '' });
+      window.location.reload();
+    } catch {
+      alert('Failed to add donation.');
+    } finally {
+      setAddingManual(false);
+    }
+  };
+
   const statusBadge = (status: string) => {
     const styles: Record<string, string> = {
       completed: 'bg-emerald-50 text-emerald-700',
@@ -181,6 +202,14 @@ export default function DonationsAdmin() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white
+                       rounded-lg text-sm font-medium hover:bg-emerald-700 transition"
+          >
+            <HiPlus className="w-4 h-4" />
+            Add Donation
+          </button>
           <button
             onClick={handleSync}
             disabled={syncing}
@@ -319,6 +348,90 @@ export default function DonationsAdmin() {
           </div>
         )}
       </div>
+
+      {/* Add Manual Donation Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md mx-4 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-bold text-gray-900">Add Manual Donation</h2>
+              <button onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-gray-600">
+                <HiXMark className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Donor Name *</label>
+                <input
+                  type="text"
+                  value={manualForm.donorName}
+                  onChange={(e) => setManualForm({ ...manualForm, donorName: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-800"
+                  placeholder="e.g. Karam Family"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email (optional)</label>
+                <input
+                  type="email"
+                  value={manualForm.donorEmail}
+                  onChange={(e) => setManualForm({ ...manualForm, donorEmail: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-800"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Amount ($) *</label>
+                <input
+                  type="number"
+                  min="1"
+                  step="0.01"
+                  value={manualForm.amount}
+                  onChange={(e) => setManualForm({ ...manualForm, amount: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-800"
+                  placeholder="1000"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
+                <select
+                  value={manualForm.paymentMethod}
+                  onChange={(e) => setManualForm({ ...manualForm, paymentMethod: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-800"
+                >
+                  <option value="check">Check</option>
+                  <option value="cash">Cash</option>
+                  <option value="zelle">Zelle</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Date (optional, defaults to today)</label>
+                <input
+                  type="date"
+                  value={manualForm.date}
+                  onChange={(e) => setManualForm({ ...manualForm, date: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-800"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddManual}
+                disabled={addingManual}
+                className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 disabled:opacity-50 transition"
+              >
+                {addingManual ? 'Adding...' : 'Add Donation'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -471,6 +471,36 @@ router.get('/admin/stats', authenticateToken, async (req, res) => {
   }
 });
 
+// Manually add a donation (for checks, cash, Zelle, etc.)
+router.post('/admin/manual', authenticateToken, async (req, res) => {
+  try {
+    const { donorName, donorEmail, amount, paymentMethod, date, notes } = req.body;
+    if (!donorName || !amount) {
+      return res.status(400).json({ error: 'Donor name and amount are required.' });
+    }
+
+    const amountCents = Math.round(parseFloat(amount) * 100);
+    const { data, error } = await supabase.from('donations').insert({
+      donor_name: donorName,
+      donor_email: donorEmail || null,
+      amount: amountCents,
+      net_amount: amountCents,
+      stripe_fee: 0,
+      is_monthly: false,
+      status: 'completed',
+      thank_you_sent: false,
+      created_at: date ? new Date(date).toISOString() : new Date().toISOString(),
+      stripe_session_id: `manual_${paymentMethod || 'cash'}_${Date.now()}`,
+    }).select().single();
+
+    if (error) throw error;
+    res.json({ success: true, donation: data });
+  } catch (err) {
+    console.error('Manual donation error:', err.message);
+    res.status(500).json({ error: 'Failed to add donation.' });
+  }
+});
+
 // Resend receipt email to donor
 router.post('/admin/:id/send-receipt', authenticateToken, async (req, res) => {
   try {
