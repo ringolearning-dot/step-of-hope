@@ -378,12 +378,15 @@ router.get('/admin/all', authenticateToken, async (req, res) => {
 // Get dashboard stats
 router.get('/admin/stats', authenticateToken, async (req, res) => {
   try {
-    // Get donation_stats
-    const { data: stats } = await supabase
-      .from('donation_stats')
-      .select('*')
-      .limit(1)
-      .single();
+    // Calculate totals from actual donation records
+    const { data: allCompleted } = await supabase
+      .from('donations')
+      .select('amount, email, is_monthly')
+      .eq('status', 'completed');
+
+    const totalRaised = (allCompleted || []).reduce((sum, d) => sum + d.amount, 0);
+    const uniqueDonors = new Set((allCompleted || []).map((d) => d.email)).size;
+    const monthlyDonors = (allCompleted || []).filter((d) => d.is_monthly).length;
 
     // Today's donations
     const todayStart = new Date();
@@ -452,9 +455,9 @@ router.get('/admin/stats', authenticateToken, async (req, res) => {
     );
 
     res.json({
-      totalRaised: stats?.total_raised || 0,
-      totalDonors: stats?.total_donors || 0,
-      monthlyDonors: stats?.monthly_donors || 0,
+      totalRaised,
+      totalDonors: uniqueDonors,
+      monthlyDonors,
       todayTotal,
       todayCount,
       monthTotal,
