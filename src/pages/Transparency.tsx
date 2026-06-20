@@ -82,7 +82,7 @@ export default function Transparency() {
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-navy via-navy-soft to-hope-dark text-white py-16 sm:py-20 -mt-52 pt-80 pb-36">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-5" />
-        <div className="relative max-w-5xl mx-auto px-4 text-center">
+        <div className="relative max-w-5xl mx-auto px-4 text-center mt-10">
           <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-1.5 mb-6">
             <HiShieldCheck className="w-4 h-4 text-gold" />
             <span className="text-sm font-medium text-white/90">Full Financial Transparency</span>
