@@ -25,23 +25,23 @@ router.get('/stats', async (req, res) => {
     // Available funds
     const availableFunds = totalRaised - totalExpenses;
 
-    // Impact stats from content table (editable via admin)
-    const { data: impactContent } = await supabase
-      .from('content')
-      .select('value')
-      .eq('key', 'transparency_impact')
+    // Impact stats from site_content table (editable via admin Content page)
+    const { data: childrenRow } = await supabase
+      .from('site_content')
+      .select('field_value')
+      .eq('page', 'impact')
+      .eq('field_key', 'transparency_children_helped')
       .single();
 
-    let childrenHelped = 150;
-    let eventsOrganized = 45;
+    const { data: eventsRow } = await supabase
+      .from('site_content')
+      .select('field_value')
+      .eq('page', 'impact')
+      .eq('field_key', 'transparency_events_organized')
+      .single();
 
-    if (impactContent?.value) {
-      try {
-        const parsed = JSON.parse(impactContent.value);
-        childrenHelped = parsed.children_helped ?? childrenHelped;
-        eventsOrganized = parsed.events_organized ?? eventsOrganized;
-      } catch {}
-    }
+    const childrenHelped = parseInt(childrenRow?.field_value) || 150;
+    const eventsOrganized = parseInt(eventsRow?.field_value) || 45;
 
     res.json({
       totalRaised,

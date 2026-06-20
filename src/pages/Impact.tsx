@@ -43,11 +43,11 @@ function SectionImage({
 /* ------------------------------------------------------------------ */
 const ease = [0.22, 1, 0.36, 1]
 
-const stats = [
-  { label: 'Families Supported', value: '150+' },
-  { label: 'Events Organized', value: '45' },
-  { label: 'Smiles Created', value: '1,200+' },
-  { label: 'Volunteers', value: '300+' },
+const defaultStats = [
+  { label: 'Children Supported', value: '50+' },
+  { label: 'Hospital Visits', value: '30+' },
+  { label: 'Birthdays Celebrated', value: '15+' },
+  { label: 'Smiles Created', value: '500+' },
 ]
 
 const galleryItems = [
@@ -190,7 +190,12 @@ export default function Impact() {
           </motion.div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            {stats.map((stat, i) => (
+            {[
+              { value: c.stat1_value || defaultStats[0].value, label: c.stat1_label || defaultStats[0].label },
+              { value: c.stat2_value || defaultStats[1].value, label: c.stat2_label || defaultStats[1].label },
+              { value: c.stat3_value || defaultStats[2].value, label: c.stat3_label || defaultStats[2].label },
+              { value: c.stat4_value || defaultStats[3].value, label: c.stat4_label || defaultStats[3].label },
+            ].map((stat, i) => (
               <motion.div
                 key={stat.label}
                 className="bg-white rounded-2xl p-8 text-center shadow-[0_4px_30px_rgba(27,42,74,0.06)]"

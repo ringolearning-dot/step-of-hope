@@ -63,6 +63,16 @@ const DEFAULTS: Record<string, Record<string, string>> = {
     hero_subtitle:
       'Every smile tells a story. See the moments that remind us why we do what we do.',
     gallery_heading: 'Moments of Impact',
+    stat1_value: '50+',
+    stat1_label: 'Children Supported',
+    stat2_value: '30+',
+    stat2_label: 'Hospital Visits',
+    stat3_value: '15+',
+    stat3_label: 'Birthdays Celebrated',
+    stat4_value: '500+',
+    stat4_label: 'Smiles Created',
+    transparency_children_helped: '150',
+    transparency_events_organized: '45',
   },
   events: {
     hero_title: 'Your Smile Can Create Another Smile',

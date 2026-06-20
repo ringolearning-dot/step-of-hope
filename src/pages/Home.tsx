@@ -198,6 +198,7 @@ const programs = [
 /* ================================================================== */
 export default function Home() {
   const c = useContent('home');
+  const ic = useContent('impact');
 
   return (
     <main className="overflow-hidden">
@@ -399,10 +400,10 @@ export default function Home() {
           </motion.div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
-              { label: 'Children Supported', value: '50+' },
-              { label: 'Hospital Visits', value: '30+' },
-              { label: 'Birthdays Celebrated', value: '15+' },
-              { label: 'Smiles Created', value: '500+' },
+              { value: ic.stat1_value || '50+', label: ic.stat1_label || 'Children Supported' },
+              { value: ic.stat2_value || '30+', label: ic.stat2_label || 'Hospital Visits' },
+              { value: ic.stat3_value || '15+', label: ic.stat3_label || 'Birthdays Celebrated' },
+              { value: ic.stat4_value || '500+', label: ic.stat4_label || 'Smiles Created' },
             ].map((stat) => (
               <motion.div
                 key={stat.label}
