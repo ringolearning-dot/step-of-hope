@@ -23,6 +23,7 @@ import adminUserRoutes from './routes/admin-users.js';
 import documentRoutes from './routes/documents.js';
 import receiptRoutes from './routes/receipts.js';
 import paypalRoutes from './routes/paypal.js';
+import transparencyRoutes from './routes/transparency.js';
 import { runDailyReport } from './routes/daily-emails.js';
 
 const app = express();
@@ -63,6 +64,7 @@ app.use('/api/admin-users', adminUserRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/receipts', receiptRoutes);
 app.use('/api/paypal', paypalRoutes);
+app.use('/api/transparency', transparencyRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

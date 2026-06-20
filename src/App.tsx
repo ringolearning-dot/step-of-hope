@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
+import TransparencyBanner from './components/TransparencyBanner';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -14,6 +15,7 @@ import EventsServices from './pages/EventsServices';
 import Donate from './pages/Donate';
 import Volunteer from './pages/Volunteer';
 import Contact from './pages/Contact';
+import Transparency from './pages/Transparency';
 import ReservationPage from './pages/ReservationPage';
 
 import AdminLogin from './pages/admin/Login';
@@ -50,6 +52,7 @@ export default function App() {
             style: { background: '#1B2A4A', color: '#fff', borderRadius: '12px' },
           }}
         />
+        <TransparencyBanner />
         <Navbar />
         <Routes>
           {/* Public routes */}
@@ -62,6 +65,7 @@ export default function App() {
           <Route path="/donate" element={<Donate />} />
           <Route path="/volunteer" element={<Volunteer />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/transparency" element={<Transparency />} />
           <Route path="/reserve/:type" element={<ReservationPage />} />
 
           {/* Admin routes */}

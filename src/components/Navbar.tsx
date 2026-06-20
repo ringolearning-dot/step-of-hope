@@ -8,6 +8,7 @@ const navLinks = [
   { name: 'Our Story', path: '/our-story' },
   { name: 'Mission', path: '/mission' },
   { name: 'Impact', path: '/impact' },
+  { name: 'Transparency', path: '/transparency' },
   { name: 'YNO', path: '/yno' },
   { name: 'Services', path: '/events' },
   { name: 'Donate', path: '/donate' },
@@ -35,7 +36,7 @@ export default function Navbar() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+      className={`fixed top-8 left-0 right-0 z-50 transition-all duration-500 ${
         isOpen ? 'bg-white shadow-lg' : scrolled ? 'bg-white/95 backdrop-blur-md shadow-lg' : 'bg-transparent'
       }`}
     >
