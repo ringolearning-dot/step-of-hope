@@ -113,7 +113,7 @@ export default function Transparency() {
       </section>
 
       {/* Charts Section */}
-      <section className="max-w-6xl mx-auto px-4 mt-16 sm:mt-20">
+      <section className="max-w-6xl mx-auto px-4 mt-16 sm:mt-20 pb-16 sm:pb-20">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Monthly Income vs Expenses */}
           {barData.length > 0 && (
