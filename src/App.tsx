@@ -40,6 +40,7 @@ import NotificationsAdmin from './pages/admin/NotificationsAdmin';
 import AdminUsersAdmin from './pages/admin/AdminUsersAdmin';
 import DocumentsAdmin from './pages/admin/DocumentsAdmin';
 import ReceiptsAdmin from './pages/admin/ReceiptsAdmin';
+import ImpactStatsAdmin from './pages/admin/ImpactStatsAdmin';
 
 export default function App() {
   return (
@@ -91,6 +92,7 @@ export default function App() {
             <Route path="volunteers" element={<VolunteersAdmin />} />
             <Route path="contacts" element={<ContactsAdmin />} />
             <Route path="content" element={<ContentAdmin />} />
+            <Route path="impact-stats" element={<ImpactStatsAdmin />} />
             <Route path="images" element={<ImagesAdmin />} />
             <Route path="documents" element={<DocumentsAdmin />} />
             <Route path="ai-assistant" element={<AIAssistantAdmin />} />

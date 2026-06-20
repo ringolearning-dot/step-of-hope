@@ -57,6 +57,7 @@ const navSections = [
     title: 'Content',
     items: [
       { to: '/admin/content', label: 'Page Content', icon: HiDocumentText },
+      { to: '/admin/impact-stats', label: 'Impact Stats', icon: HiChartBar },
       { to: '/admin/images', label: 'Images', icon: HiPhoto },
       { to: '/admin/documents', label: 'Documents', icon: HiFolderOpen },
     ],
