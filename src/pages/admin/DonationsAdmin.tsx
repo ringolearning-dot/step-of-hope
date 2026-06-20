@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../../lib/api';
-import { HiCurrencyDollar, HiCheckCircle, HiClock, HiArrowDownTray, HiArrowPath, HiPlus, HiXMark } from 'react-icons/hi2';
+import { HiCurrencyDollar, HiCheckCircle, HiClock, HiArrowDownTray, HiArrowPath, HiPlus, HiXMark, HiTrash } from 'react-icons/hi2';
 
 interface Donation {
   id: number;
@@ -131,6 +131,16 @@ export default function DonationsAdmin() {
       alert('Failed to add donation.');
     } finally {
       setAddingManual(false);
+    }
+  };
+
+  const handleDelete = async (id: number, name: string) => {
+    if (!confirm(`Delete donation from "${name}"? This cannot be undone.`)) return;
+    try {
+      await api.delete(`/donations/admin/${id}`);
+      setDonations(prev => prev.filter(d => d.id !== id));
+    } catch {
+      alert('Failed to delete donation.');
     }
   };
 
@@ -280,6 +290,7 @@ export default function DonationsAdmin() {
                 <th className="px-5 py-3 font-medium">Net</th>
                 <th className="px-5 py-3 font-medium">Status</th>
                 <th className="px-5 py-3 font-medium">Monthly</th>
+                <th className="px-5 py-3 font-medium"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -308,11 +319,20 @@ export default function DonationsAdmin() {
                       {d.isMonthly || d.is_monthly ? 'Yes' : 'No'}
                     </span>
                   </td>
+                  <td className="px-5 py-3 whitespace-nowrap">
+                    <button
+                      onClick={() => handleDelete(d.id, d.donorName || d.donor_name || 'Anonymous')}
+                      className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                      title="Delete donation"
+                    >
+                      <HiTrash className="w-4 h-4" />
+                    </button>
+                  </td>
                 </tr>
               ))}
               {paginated.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-5 py-8 text-center text-gray-400">
+                  <td colSpan={8} className="px-5 py-8 text-center text-gray-400">
                     No donations found.
                   </td>
                 </tr>

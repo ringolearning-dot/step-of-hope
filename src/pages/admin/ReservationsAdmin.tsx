@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../../lib/api';
-import { HiCalendarDays, HiCamera, HiVideoCamera, HiCurrencyDollar, HiArrowTrendingUp } from 'react-icons/hi2';
+import { HiCalendarDays, HiCamera, HiVideoCamera, HiCurrencyDollar, HiArrowTrendingUp, HiTrash } from 'react-icons/hi2';
 
 interface Reservation {
   id: string;
@@ -250,6 +250,13 @@ export default function ReservationsAdmin() {
                         className="text-emerald-600 hover:text-emerald-800 text-xs font-medium disabled:opacity-50"
                       >
                         {sendingReceipt === r.id ? 'Sending...' : 'Send Receipt'}
+                      </button>
+                      <button
+                        onClick={() => deleteReservation(r.id)}
+                        className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition"
+                        title="Delete reservation"
+                      >
+                        <HiTrash className="w-4 h-4" />
                       </button>
                     </div>
                   </td>

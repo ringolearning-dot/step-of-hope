@@ -501,6 +501,22 @@ router.post('/admin/manual', authenticateToken, async (req, res) => {
   }
 });
 
+// Delete a donation
+router.delete('/admin/:id', authenticateToken, async (req, res) => {
+  try {
+    const { error } = await supabase
+      .from('donations')
+      .delete()
+      .eq('id', req.params.id);
+
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Delete donation error:', err.message);
+    res.status(500).json({ error: 'Failed to delete donation.' });
+  }
+});
+
 // Resend receipt email to donor
 router.post('/admin/:id/send-receipt', authenticateToken, async (req, res) => {
   try {
