@@ -101,7 +101,7 @@ export default function Dashboard() {
             <div className="w-9 h-9 bg-emerald-50 rounded-lg flex items-center justify-center"><HiCurrencyDollar className="w-5 h-5 text-emerald-600" /></div>
           </div>
           <p className="text-2xl font-bold text-gray-900">{fmt(totalRaised)}</p>
-          <p className="text-xs text-gray-500 mt-1">{donationStats?.monthCount || 0} this month</p>
+          <p className="text-xs text-gray-500 mt-1">{fmt(reservationStats?.totalRevenue || 0)} from reservations</p>
         </div>
 
         <div className="bg-white rounded-xl border border-gray-200 p-5">
