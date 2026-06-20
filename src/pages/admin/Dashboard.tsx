@@ -56,7 +56,8 @@ export default function Dashboard() {
     );
   }
 
-  const balance = (donationStats?.totalRaised || 0) - (expenseStats?.totalExpenses || 0);
+  const totalRaised = (donationStats?.totalRaised || 0) + (reservationStats?.totalRevenue || 0);
+  const balance = totalRaised - (expenseStats?.totalExpenses || 0);
   const chartData = (donationStats?.monthlyBreakdown || []).map((item: any) => ({
     month: item.month,
     donations: item.total / 100,
@@ -99,7 +100,7 @@ export default function Dashboard() {
             <span className="text-sm font-medium text-gray-500">Total Raised</span>
             <div className="w-9 h-9 bg-emerald-50 rounded-lg flex items-center justify-center"><HiCurrencyDollar className="w-5 h-5 text-emerald-600" /></div>
           </div>
-          <p className="text-2xl font-bold text-gray-900">{fmt(donationStats?.totalRaised || 0)}</p>
+          <p className="text-2xl font-bold text-gray-900">{fmt(totalRaised)}</p>
           <p className="text-xs text-gray-500 mt-1">{donationStats?.monthCount || 0} this month</p>
         </div>
 
@@ -173,8 +174,8 @@ export default function Dashboard() {
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-emerald-50 rounded-lg flex items-center justify-center"><HiArrowTrendingUp className="w-5 h-5 text-emerald-600" /></div>
             <div>
-              <p className="text-sm text-gray-500">Revenue</p>
-              <p className="text-lg font-bold">{fmt(reservationStats?.totalRevenue || 0)}</p>
+              <p className="text-sm text-gray-500">Total Revenue</p>
+              <p className="text-lg font-bold">{fmt(totalRaised)}</p>
             </div>
           </div>
         </Link>

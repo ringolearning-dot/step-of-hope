@@ -13,7 +13,17 @@ router.get('/stats', async (req, res) => {
       .select('amount')
       .eq('status', 'completed');
 
-    const totalRaised = (allDonations || []).reduce((sum, d) => sum + d.amount, 0);
+    const donationTotal = (allDonations || []).reduce((sum, d) => sum + d.amount, 0);
+
+    // Reservation revenue (paid/confirmed)
+    const { data: allReservations } = await supabase
+      .from('reservations')
+      .select('total_amount')
+      .in('status', ['paid', 'confirmed', 'completed']);
+
+    const reservationTotal = (allReservations || []).reduce((sum, r) => sum + (r.total_amount || 0), 0);
+
+    const totalRaised = donationTotal + reservationTotal;
 
     // Total expenses
     const { data: allExpenses } = await supabase

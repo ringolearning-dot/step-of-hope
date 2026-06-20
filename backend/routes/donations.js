@@ -384,9 +384,18 @@ router.get('/admin/stats', authenticateToken, async (req, res) => {
       .select('amount, donor_email, is_monthly')
       .eq('status', 'completed');
 
-    const totalRaised = (allCompleted || []).reduce((sum, d) => sum + d.amount, 0);
+    const donationTotal = (allCompleted || []).reduce((sum, d) => sum + d.amount, 0);
     const uniqueDonors = new Set((allCompleted || []).map((d) => d.donor_email)).size;
     const monthlyDonors = (allCompleted || []).filter((d) => d.is_monthly).length;
+
+    // Include reservation revenue in total raised
+    const { data: allReservations } = await supabase
+      .from('reservations')
+      .select('total_amount')
+      .in('status', ['paid', 'confirmed', 'completed']);
+
+    const reservationTotal = (allReservations || []).reduce((sum, r) => sum + (r.total_amount || 0), 0);
+    const totalRaised = donationTotal + reservationTotal;
 
     // Today's donations
     const todayStart = new Date();
