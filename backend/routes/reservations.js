@@ -648,6 +648,43 @@ router.post('/webhook', async (req, res) => {
       if (reservation) {
         await sendConfirmationEmail(reservation);
         await sendAdminNotification(reservation);
+
+        // Record reservation payment as a donation so it counts toward total raised / lifetime revenue
+        const serviceLabel = reservation.service_type === 'photobooth' ? 'Photobooth'
+          : reservation.service_type === '360booth' ? '360 Booth'
+          : 'Photobooth & 360 Booth';
+        await supabase.from('donations').insert({
+          stripe_session_id: 'res_' + session.id,
+          stripe_payment_intent: session.payment_intent,
+          donor_name: reservation.full_name,
+          donor_email: reservation.email,
+          amount: reservation.total_amount,
+          currency: reservation.currency || 'usd',
+          status: 'completed',
+          is_monthly: false,
+          stripe_fee: 0,
+          net_amount: reservation.total_amount,
+          payment_method: 'stripe',
+          is_offline: false,
+          thank_you_sent: true,
+        });
+
+        // Update donation_stats (lifetime revenue)
+        const { data: stats } = await supabase
+          .from('donation_stats')
+          .select('*')
+          .limit(1)
+          .single();
+
+        if (stats) {
+          await supabase
+            .from('donation_stats')
+            .update({
+              total_raised: stats.total_raised + reservation.total_amount,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', stats.id);
+        }
       }
       break;
     }
