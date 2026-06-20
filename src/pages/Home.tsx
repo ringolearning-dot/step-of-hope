@@ -261,7 +261,7 @@ export default function Home() {
       {/* ============================================================ */}
       {/*  SLOGAN                                                       */}
       {/* ============================================================ */}
-      <section className="bg-navy py-6">
+      <section className="bg-navy pt-6 pb-28">
         <div className="text-center px-6">
           <p className="font-display text-xl sm:text-2xl font-bold text-white tracking-wide">
             Never Lose Hope. Keep On Fighting.
