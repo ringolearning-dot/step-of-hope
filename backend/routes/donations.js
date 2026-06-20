@@ -381,11 +381,11 @@ router.get('/admin/stats', authenticateToken, async (req, res) => {
     // Calculate totals from actual donation records
     const { data: allCompleted } = await supabase
       .from('donations')
-      .select('amount, email, is_monthly')
+      .select('amount, donor_email, is_monthly')
       .eq('status', 'completed');
 
     const totalRaised = (allCompleted || []).reduce((sum, d) => sum + d.amount, 0);
-    const uniqueDonors = new Set((allCompleted || []).map((d) => d.email)).size;
+    const uniqueDonors = new Set((allCompleted || []).map((d) => d.donor_email)).size;
     const monthlyDonors = (allCompleted || []).filter((d) => d.is_monthly).length;
 
     // Today's donations
