@@ -98,7 +98,7 @@ export default function Transparency() {
       </section>
 
       {/* Stats Cards */}
-      <section className="max-w-6xl mx-auto px-4 -mt-10 relative z-10">
+      <section className="max-w-6xl mx-auto px-4 mt-6 relative z-10">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           {statCards.map((card) => (
             <div key={card.label} className={`bg-white rounded-xl border ${card.border} p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow`}>
