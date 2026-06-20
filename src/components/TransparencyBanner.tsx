@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { HiCurrencyDollar, HiHeart, HiCalendarDays, HiBanknotes, HiReceiptPercent } from 'react-icons/hi2';
+import { HiCurrencyDollar, HiBanknotes, HiReceiptPercent } from 'react-icons/hi2';
 import api from '../lib/api';
 
 const fmt = (cents: number) =>
@@ -50,8 +50,6 @@ export default function TransparencyBanner() {
     { icon: HiCurrencyDollar, label: 'Raised', value: fmt(stats.totalRaised), color: 'text-emerald-400' },
     { icon: HiReceiptPercent, label: 'Expenses', value: fmt(stats.totalExpenses), color: 'text-red-400' },
     { icon: HiBanknotes, label: 'Available', value: fmt(stats.availableFunds), color: 'text-blue-400' },
-    { icon: HiHeart, label: 'Children Helped', value: `${stats.childrenHelped}+`, color: 'text-pink-400' },
-    { icon: HiCalendarDays, label: 'Events', value: `${stats.eventsOrganized}`, color: 'text-amber-400' },
   ];
 
   return (

@@ -6,18 +6,12 @@ import {
   ResponsiveContainer, Legend,
 } from 'recharts';
 import {
-  HiCurrencyDollar, HiHeart, HiCalendarDays, HiBanknotes, HiReceiptPercent,
+  HiCurrencyDollar, HiHeart, HiBanknotes, HiReceiptPercent,
   HiShieldCheck, HiEye,
 } from 'react-icons/hi2';
 
-const fmt = (cents: number) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cents / 100);
-
 const fmtShort = (cents: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(cents / 100);
-
-const fmtDate = (d: string) =>
-  new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 
 const PIE_COLORS = ['#10B981', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316', '#6366F1', '#14B8A6'];
 
@@ -25,7 +19,6 @@ export default function Transparency() {
   const [stats, setStats] = useState<any>(null);
   const [donations, setDonations] = useState<any[]>([]);
   const [expenses, setExpenses] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<'donations' | 'expenses'>('donations');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -82,8 +75,6 @@ export default function Transparency() {
     { icon: HiCurrencyDollar, label: 'Lifetime Donations Raised', value: fmtShort(stats?.totalRaised || 0), color: 'bg-emerald-50 text-emerald-600', border: 'border-emerald-200' },
     { icon: HiReceiptPercent, label: 'Total Expenses', value: fmtShort(stats?.totalExpenses || 0), color: 'bg-red-50 text-red-600', border: 'border-red-200' },
     { icon: HiBanknotes, label: 'Current Available Funds', value: fmtShort(stats?.availableFunds || 0), color: 'bg-blue-50 text-blue-600', border: 'border-blue-200' },
-    { icon: HiHeart, label: 'Children Helped', value: `${stats?.childrenHelped || 0}+`, color: 'bg-pink-50 text-pink-600', border: 'border-pink-200' },
-    { icon: HiCalendarDays, label: 'Events Organized', value: `${stats?.eventsOrganized || 0}`, color: 'bg-amber-50 text-amber-600', border: 'border-amber-200' },
   ];
 
   return (
@@ -108,7 +99,7 @@ export default function Transparency() {
 
       {/* Stats Cards */}
       <section className="max-w-6xl mx-auto px-4 -mt-10 relative z-10">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           {statCards.map((card) => (
             <div key={card.label} className={`bg-white rounded-xl border ${card.border} p-4 sm:p-5 shadow-sm hover:shadow-md transition-shadow`}>
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-3 ${card.color}`}>
@@ -192,135 +183,6 @@ export default function Transparency() {
         </div>
       </section>
 
-      {/* Donations & Expenses Tables */}
-      <section className="max-w-6xl mx-auto px-4 mt-10 sm:mt-14 pb-20">
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          {/* Tab Header */}
-          <div className="flex items-center border-b border-gray-200">
-            <button
-              onClick={() => setActiveTab('donations')}
-              className={`flex-1 sm:flex-none px-6 py-4 text-sm font-medium transition-colors relative ${
-                activeTab === 'donations'
-                  ? 'text-emerald-600'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <div className="flex items-center justify-center gap-2">
-                <HiCurrencyDollar className="w-4 h-4" />
-                Donations
-                <span className="bg-emerald-50 text-emerald-700 text-xs font-semibold px-2 py-0.5 rounded-full">
-                  {donations.length}
-                </span>
-              </div>
-              {activeTab === 'donations' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-600" />
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab('expenses')}
-              className={`flex-1 sm:flex-none px-6 py-4 text-sm font-medium transition-colors relative ${
-                activeTab === 'expenses'
-                  ? 'text-red-600'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <div className="flex items-center justify-center gap-2">
-                <HiReceiptPercent className="w-4 h-4" />
-                Expenses
-                <span className="bg-red-50 text-red-700 text-xs font-semibold px-2 py-0.5 rounded-full">
-                  {expenses.length}
-                </span>
-              </div>
-              {activeTab === 'expenses' && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-600" />
-              )}
-            </button>
-          </div>
-
-          {/* Donations Table */}
-          {activeTab === 'donations' && (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-xs text-gray-500 uppercase tracking-wider bg-gray-50/80">
-                    <th className="px-5 py-3 font-medium">Date</th>
-                    <th className="px-5 py-3 font-medium">Donor</th>
-                    <th className="px-5 py-3 font-medium">Amount</th>
-                    <th className="px-5 py-3 font-medium">Type</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {donations.map((d) => (
-                    <tr key={d.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-5 py-3 text-gray-500">{fmtDate(d.date)}</td>
-                      <td className="px-5 py-3 font-medium text-gray-900">{d.donor}</td>
-                      <td className="px-5 py-3 font-semibold text-emerald-600">{fmt(d.amount)}</td>
-                      <td className="px-5 py-3">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                          d.isMonthly
-                            ? 'bg-purple-50 text-purple-700'
-                            : 'bg-blue-50 text-blue-700'
-                        }`}>
-                          {d.isMonthly ? 'Monthly' : 'One-time'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                  {donations.length === 0 && (
-                    <tr>
-                      <td colSpan={4} className="px-5 py-12 text-center text-gray-400">
-                        No donations recorded yet.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* Expenses Table */}
-          {activeTab === 'expenses' && (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-xs text-gray-500 uppercase tracking-wider bg-gray-50/80">
-                    <th className="px-5 py-3 font-medium">Date</th>
-                    <th className="px-5 py-3 font-medium">Amount</th>
-                    <th className="px-5 py-3 font-medium">Category</th>
-                    <th className="px-5 py-3 font-medium">Description</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {expenses.map((e) => (
-                    <tr key={e.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-5 py-3 text-gray-500 whitespace-nowrap">{fmtDate(e.date)}</td>
-                      <td className="px-5 py-3 font-semibold text-red-600">{fmt(e.amount)}</td>
-                      <td className="px-5 py-3">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
-                          {e.category}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3 text-gray-700 max-w-md">
-                        <p className="font-medium">{e.title}</p>
-                        {e.description && (
-                          <p className="text-gray-500 text-xs mt-0.5">{e.description}</p>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                  {expenses.length === 0 && (
-                    <tr>
-                      <td colSpan={4} className="px-5 py-12 text-center text-gray-400">
-                        No expenses recorded yet.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </section>
 
       {/* Trust Footer */}
       <section className="bg-navy text-white py-14">
