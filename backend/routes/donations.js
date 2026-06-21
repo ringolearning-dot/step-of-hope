@@ -581,6 +581,12 @@ router.post('/admin/manual', authenticateToken, async (req, res) => {
     }).select().single();
 
     if (error) throw error;
+
+    // Send receipt email for manual donations
+    if (data && data.donor_email) {
+      sendDonationReceipt(data);
+    }
+
     res.json({ success: true, donation: data });
   } catch (err) {
     console.error('Manual donation error:', err.message);
