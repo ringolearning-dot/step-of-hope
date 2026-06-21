@@ -63,7 +63,7 @@ export default function Footer() {
             <h3 className="text-white font-semibold text-sm uppercase tracking-widest mb-5">
               Connect
             </h3>
-            <p className="text-white/50 text-sm mb-2">info@stepofhope.org</p>
+            <p className="text-white/50 text-sm mb-2">contactus@stepofhope.org</p>
             <p className="text-white/50 text-sm mb-6">stepofhope.org</p>
             <div className="flex gap-4">
               <a

@@ -1,6 +1,9 @@
 import { Router } from 'express';
 import supabase from '../db/init.js';
 import { authenticateToken } from '../middleware/auth.js';
+import { sendEmail } from '../lib/email.js';
+
+const CONTACT_EMAIL = 'contactus@stepofhope.org';
 
 const router = Router();
 
@@ -25,6 +28,28 @@ router.post('/', async (req, res) => {
       console.error('Contact insert error:', error.message);
       return res.status(500).json({ error: 'Failed to submit contact form.' });
     }
+
+    // Send email notification to contactus@stepofhope.org
+    sendEmail({
+      to: CONTACT_EMAIL,
+      subject: `New Contact: ${subject || inquiryType || 'General Inquiry'} — ${name}`,
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+          <h2 style="color:#1e293b;border-bottom:2px solid #c8a951;padding-bottom:10px">New Contact Form Submission</h2>
+          <table style="width:100%;border-collapse:collapse;margin-top:16px">
+            <tr><td style="padding:8px 0;color:#64748b;width:120px"><strong>Name</strong></td><td style="padding:8px 0;color:#1e293b">${name}</td></tr>
+            <tr><td style="padding:8px 0;color:#64748b"><strong>Email</strong></td><td style="padding:8px 0;color:#1e293b"><a href="mailto:${email}">${email}</a></td></tr>
+            <tr><td style="padding:8px 0;color:#64748b"><strong>Subject</strong></td><td style="padding:8px 0;color:#1e293b">${subject || 'N/A'}</td></tr>
+            <tr><td style="padding:8px 0;color:#64748b"><strong>Inquiry Type</strong></td><td style="padding:8px 0;color:#1e293b">${inquiryType || 'General'}</td></tr>
+          </table>
+          <div style="margin-top:20px;padding:16px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0">
+            <p style="color:#64748b;margin:0 0 8px;font-size:13px"><strong>Message:</strong></p>
+            <p style="color:#1e293b;margin:0;white-space:pre-wrap">${message}</p>
+          </div>
+          <p style="margin-top:20px;font-size:12px;color:#94a3b8">Reply directly to this email or to <a href="mailto:${email}">${email}</a></p>
+        </div>
+      `,
+    }).catch(err => console.error('Contact email error:', err.message));
 
     res.json({ message: 'Thank you for reaching out! We will get back to you soon.' });
   } catch (err) {
