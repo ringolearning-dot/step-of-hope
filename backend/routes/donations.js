@@ -21,75 +21,101 @@ async function sendDonationReceipt(donation) {
     const donationType = donation.is_monthly ? 'Monthly Donation' : 'One-Time Donation';
     const receiptNo = receiptNumber('D', donation.id, createdAt);
 
+    const logoUrl = `${process.env.FRONTEND_URL || 'https://stepofhope.org'}/logo.png`;
+
     await sendEmail({
       to: donation.donor_email,
       subject: `Thank You for Your Donation — Step of Hope Foundation`,
       html: `
-        <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1B2A4A;">
+        <!DOCTYPE html>
+        <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+        <body style="margin:0;padding:0;background:#f3f4f6;-webkit-text-size-adjust:100%;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f4f6;">
+        <tr><td align="center" style="padding:20px 10px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:0 auto;">
+
           <!-- Header -->
-          <div style="background: linear-gradient(135deg, #1B2A4A, #2C3E6B); padding: 40px 30px; text-align: center; border-radius: 12px 12px 0 0;">
-            <h1 style="color: #fff; margin: 0; font-size: 28px; letter-spacing: 1px;">Step of Hope Foundation</h1>
-            <p style="color: rgba(255,255,255,0.6); margin: 8px 0 0; font-size: 13px; letter-spacing: 0.5px;">DONATION RECEIPT</p>
-          </div>
+          <tr><td style="background:#1B2A4A;padding:28px 20px;text-align:center;border-radius:12px 12px 0 0;">
+            <img src="${logoUrl}" alt="Step of Hope" width="60" height="60" style="display:block;margin:0 auto 12px;border-radius:8px;" />
+            <h1 style="color:#fff;margin:0;font-size:22px;font-family:'Helvetica Neue',Arial,sans-serif;letter-spacing:0.5px;">Step of Hope Foundation</h1>
+            <p style="color:rgba(255,255,255,0.5);margin:6px 0 0;font-size:12px;letter-spacing:1px;font-family:Arial,sans-serif;">DONATION RECEIPT</p>
+          </td></tr>
 
           <!-- Body -->
-          <div style="background: #fff; padding: 32px 30px; border: 1px solid #e5e7eb; border-top: none;">
-            <!-- Thank you message -->
-            <p style="font-size: 16px; margin: 0 0 16px;">Dear <strong>${donorName}</strong>,</p>
-            <p style="font-size: 15px; line-height: 1.7; color: #374151; margin: 0 0 8px;">
+          <tr><td style="background:#ffffff;padding:24px 20px;font-family:'Helvetica Neue',Arial,sans-serif;color:#1B2A4A;">
+
+            <p style="font-size:15px;margin:0 0 12px;line-height:1.5;">Dear <strong>${donorName}</strong>,</p>
+            <p style="font-size:14px;line-height:1.7;color:#374151;margin:0 0 6px;">
               Thank you for your generous donation to Step of Hope Foundation!
             </p>
-            <p style="font-size: 15px; line-height: 1.7; color: #374151; margin: 0 0 24px;">
+            <p style="font-size:14px;line-height:1.7;color:#374151;margin:0 0 20px;">
               Your kindness is doing more than you know — it is helping bring smiles, hope, and joy to children facing serious illnesses and difficult challenges.
             </p>
 
             <!-- Receipt Box -->
-            <div style="background: #f9fafb; border-radius: 10px; padding: 24px; margin: 0 0 24px; border: 1px solid #e5e7eb;">
-              <table style="width: 100%; margin-bottom: 16px;"><tr>
-                <td style="text-align: left;"><h3 style="margin: 0; font-size: 16px; color: #1B2A4A;">Receipt #${receiptNo}</h3></td>
-                <td style="text-align: right; white-space: nowrap;"><span style="font-size: 13px; color: #6b7280;">${receiptDate}</span></td>
-              </tr></table>
-
-              <table style="width: 100%; border-collapse: collapse;">
-                <tr style="border-bottom: 1px solid #e5e7eb;">
-                  <td style="padding: 10px 0; font-size: 13px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">Description</td>
-                  <td style="padding: 10px 0; font-size: 13px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; text-align: right;">Amount</td>
-                </tr>
-                <tr><td style="padding: 10px 0; font-size: 14px; color: #374151;">${donationType}</td><td style="padding: 10px 0; font-size: 14px; color: #374151; text-align: right; font-weight: 600;">${amountFormatted}</td></tr>
-                <tr><td style="padding: 8px 0; font-size: 14px; color: #374151;">Donor</td><td style="padding: 8px 0; font-size: 14px; color: #374151; text-align: right; font-weight: 600;">${donorName}</td></tr>
-                ${donation.donor_email ? `<tr><td style="padding: 8px 0; font-size: 14px; color: #374151;">Email</td><td style="padding: 8px 0; font-size: 14px; color: #374151; text-align: right;">${donation.donor_email}</td></tr>` : ''}
-                ${donation.is_monthly ? `<tr><td style="padding: 8px 0; font-size: 14px; color: #374151;">Frequency</td><td style="padding: 8px 0; font-size: 14px; color: #374151; text-align: right; font-weight: 600;">Monthly (recurring)</td></tr>` : ''}
-              </table>
-
-              <!-- Total -->
-              <div style="border-top: 2px solid #1B2A4A; margin-top: 12px; padding-top: 14px;">
-                <span style="font-size: 15px; font-weight: 700; color: #1B2A4A;">TOTAL</span>
-                <span style="font-size: 22px; font-weight: 800; color: #059669; float: right;">${amountFormatted}</span>
-              </div>
-            </div>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb;">
+              <tr><td style="padding:16px 16px 12px;">
+                <p style="margin:0;font-size:14px;font-weight:700;color:#1B2A4A;">Receipt #${receiptNo}</p>
+                <p style="margin:4px 0 0;font-size:12px;color:#6b7280;">${receiptDate}</p>
+              </td></tr>
+              <tr><td style="padding:0 16px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #e5e7eb;">
+                  <tr>
+                    <td style="padding:10px 0;font-size:13px;color:#374151;width:50%;">${donationType}</td>
+                    <td style="padding:10px 0;font-size:13px;color:#374151;text-align:right;font-weight:600;">${amountFormatted}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:6px 0;font-size:13px;color:#374151;">Donor</td>
+                    <td style="padding:6px 0;font-size:13px;color:#374151;text-align:right;font-weight:600;">${donorName}</td>
+                  </tr>
+                  ${donation.donor_email ? `<tr>
+                    <td style="padding:6px 0;font-size:13px;color:#374151;">Email</td>
+                    <td style="padding:6px 0;font-size:13px;color:#374151;text-align:right;word-break:break-all;">${donation.donor_email}</td>
+                  </tr>` : ''}
+                  ${donation.is_monthly ? `<tr>
+                    <td style="padding:6px 0;font-size:13px;color:#374151;">Frequency</td>
+                    <td style="padding:6px 0;font-size:13px;color:#374151;text-align:right;font-weight:600;">Monthly</td>
+                  </tr>` : ''}
+                </table>
+              </td></tr>
+              <tr><td style="padding:0 16px 16px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:2px solid #1B2A4A;margin-top:8px;">
+                  <tr>
+                    <td style="padding:12px 0 0;font-size:14px;font-weight:700;color:#1B2A4A;">TOTAL</td>
+                    <td style="padding:12px 0 0;font-size:20px;font-weight:800;color:#059669;text-align:right;">${amountFormatted}</td>
+                  </tr>
+                </table>
+              </td></tr>
+            </table>
 
             <!-- Mission message -->
-            <div style="border-left: 4px solid #C8A951; padding-left: 20px; margin: 24px 0;">
-              <p style="font-size: 15px; line-height: 1.7; color: #374151; margin: 0 0 12px;">
-                Because of your support, we can continue organizing hospital visits, dream birthdays, holiday celebrations, and special events that make a real difference in a child's life.
-              </p>
-              <p style="font-size: 15px; line-height: 1.7; color: #374151; margin: 0 0 12px;">
-                Every dollar raised helps bring more smiles, hope, and meaningful experiences to children who need them most.
-              </p>
-              <p style="font-size: 15px; line-height: 1.7; color: #374151; margin: 0;">
-                Thank you for helping us turn kindness into hope.
-              </p>
-            </div>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:20px;">
+              <tr>
+                <td width="4" style="background:#C8A951;border-radius:2px;"></td>
+                <td style="padding:0 0 0 16px;">
+                  <p style="font-size:14px;line-height:1.7;color:#374151;margin:0 0 10px;">
+                    Because of your support, we can continue organizing hospital visits, dream birthdays, holiday celebrations, and special events that make a real difference in a child's life.
+                  </p>
+                  <p style="font-size:14px;line-height:1.7;color:#374151;margin:0;">
+                    Thank you for helping us turn kindness into hope.
+                  </p>
+                </td>
+              </tr>
+            </table>
 
-          </div>
+          </td></tr>
 
           <!-- Footer -->
-          <div style="background: #1B2A4A; padding: 24px 30px; text-align: center; border-radius: 0 0 12px 12px;">
-            <p style="color: #C8A951; font-size: 14px; font-weight: 600; font-style: italic; margin: 0 0 8px;">"Every Child Deserves to Smile"</p>
-            <p style="font-size: 13px; color: rgba(255,255,255,0.5); margin: 0 0 4px;">Step of Hope Foundation</p>
-            <a href="https://www.stepofhope.org" style="font-size: 13px; color: rgba(255,255,255,0.7); text-decoration: none;">www.stepofhope.org</a>
-          </div>
-        </div>
+          <tr><td style="background:#1B2A4A;padding:20px;text-align:center;border-radius:0 0 12px 12px;">
+            <p style="color:#C8A951;font-size:13px;font-weight:600;font-style:italic;margin:0 0 6px;font-family:Arial,sans-serif;">"Every Child Deserves to Smile"</p>
+            <p style="font-size:12px;color:rgba(255,255,255,0.5);margin:0 0 4px;font-family:Arial,sans-serif;">Step of Hope Foundation</p>
+            <a href="https://www.stepofhope.org" style="font-size:12px;color:rgba(255,255,255,0.7);text-decoration:none;font-family:Arial,sans-serif;">www.stepofhope.org</a>
+          </td></tr>
+
+        </table>
+        </td></tr>
+        </table>
+        </body></html>
       `,
     });
 
