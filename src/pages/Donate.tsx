@@ -46,7 +46,10 @@ export default function Donate() {
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'paypal' | 'zelle'>('card');
 
   useEffect(() => {
-    if (searchParams.get('success') === 'true') {
+    const sessionId = searchParams.get('session_id');
+    if (searchParams.get('success') === 'true' && sessionId) {
+      // Verify payment and trigger receipt email
+      api.get(`/donations/verify/${sessionId}`).catch(() => {});
       toast.success('Thank you for your generous donation! Your support brings hope to those who need it most.');
     }
     if (searchParams.get('canceled') === 'true') {
