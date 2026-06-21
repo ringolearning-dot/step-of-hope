@@ -52,7 +52,18 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 // Upload a new document (admin)
-router.post('/', authenticateToken, uploadFields, async (req, res) => {
+router.post('/', authenticateToken, (req, res, next) => {
+  uploadFields(req, res, (err) => {
+    if (err) {
+      console.error('Multer upload error:', err.message);
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(400).json({ error: 'File too large. Maximum size is 50 MB.' });
+      }
+      return res.status(400).json({ error: err.message || 'File upload error.' });
+    }
+    next();
+  });
+}, async (req, res) => {
   try {
     const mainFile = req.files?.file?.[0];
     const imageFile = req.files?.image?.[0];
@@ -75,8 +86,8 @@ router.post('/', authenticateToken, uploadFields, async (req, res) => {
       });
 
     if (uploadError) {
-      console.error('Storage upload error:', uploadError.message);
-      return res.status(500).json({ error: 'Failed to upload file to storage.' });
+      console.error('Storage upload error:', JSON.stringify(uploadError));
+      return res.status(500).json({ error: `Failed to upload file to storage: ${uploadError.message}` });
     }
 
     // Get public URL for main file
@@ -130,14 +141,14 @@ router.post('/', authenticateToken, uploadFields, async (req, res) => {
       .single();
 
     if (error) {
-      console.error('Document insert error:', error.message);
-      return res.status(500).json({ error: 'Failed to save document record.' });
+      console.error('Document insert error:', JSON.stringify(error));
+      return res.status(500).json({ error: `Failed to save document record: ${error.message}` });
     }
 
     res.json(data);
   } catch (err) {
-    console.error('Upload document error:', err.message);
-    res.status(500).json({ error: 'Failed to upload document.' });
+    console.error('Upload document error:', err.message, err.stack);
+    res.status(500).json({ error: `Failed to upload document: ${err.message}` });
   }
 });
 

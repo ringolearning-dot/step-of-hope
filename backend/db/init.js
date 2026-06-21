@@ -39,6 +39,16 @@ export async function initDB() {
     });
   }
 
+  // Ensure documents table exists
+  const { error: docCheck } = await supabase
+    .from('documents')
+    .select('id')
+    .limit(1);
+
+  if (docCheck && docCheck.code === '42P01') {
+    console.log('Documents table not found — please run migrations/create_documents_table.sql in Supabase');
+  }
+
   console.log('Database initialized');
 }
 
