@@ -269,6 +269,58 @@ router.get('/verify/:sessionId', async (req, res) => {
       .single();
 
     if (error || !donation) return res.status(404).json({ error: 'Donation not found.' });
+
+    // If still pending, check Stripe directly and complete it
+    if (donation.status === 'pending') {
+      try {
+        const stripe = getStripe();
+        const session = await stripe.checkout.sessions.retrieve(req.params.sessionId);
+
+        if (session.payment_status === 'paid') {
+          await supabase
+            .from('donations')
+            .update({
+              status: 'completed',
+              stripe_payment_intent: session.payment_intent || session.subscription,
+            })
+            .eq('id', donation.id);
+
+          donation.status = 'completed';
+          donation.stripe_payment_intent = session.payment_intent || session.subscription;
+
+          // Send receipt + admin notification
+          if (!donation.thank_you_sent) {
+            sendDonationReceipt(donation);
+            sendDonationAdminNotification(donation);
+          }
+
+          // Update donation_stats
+          const { data: stats } = await supabase
+            .from('donation_stats')
+            .select('*')
+            .limit(1)
+            .single();
+
+          if (stats) {
+            const updates = {
+              total_raised: stats.total_raised + donation.amount,
+              total_donors: stats.total_donors + 1,
+              updated_at: new Date().toISOString(),
+            };
+            if (donation.is_monthly) {
+              updates.monthly_donors = stats.monthly_donors + 1;
+            }
+            await supabase
+              .from('donation_stats')
+              .update(updates)
+              .eq('id', stats.id);
+          }
+        }
+      } catch (stripeErr) {
+        console.error('Verify stripe check error:', stripeErr.message);
+      }
+    }
+
     res.json({ status: donation.status, amount: donation.amount });
   } catch (err) {
     res.status(500).json({ error: 'Failed to verify donation.' });
